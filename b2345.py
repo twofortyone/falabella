@@ -58,10 +58,13 @@ dff3p3, ndu, cdu = ica.get_duplicates( dff3p2, ['f3', 'upc'], 'F3')
 ne, nne, cne = ica.get_notfound( dff3p3, f3, ['f3', 'upc'], ['nro devolucion', 'upc'], 'nro devolucion', 'F3')
 bdf3cant = pd.merge(dff3p3, f3, left_on=['f3','upc'], right_on=['nro devolucion','upc']) # Unir b2345 con F3
 bdf3cant2, ndc, cdc = ica.get_diffqty(bdf3cant, 'unidades', 'cantidad', 'F3')
-bdf3cant3, nanu, canu = ica.get_canceledstatus(bdf3cant2, 'descripcion.6', 'F3')
-# TODO verificar año diferente a 2021 
+bdf3cant3, nanu, canu = ica.get_canceledstatus(bdf3cant2, 'descripcion.6', 'F3') # TODO cambiar por get_equalvalue()
 
-iokf3 = bdf3cant3[index_name].values
+bdf3conf = bdf3cant3[bdf3cant3['descripcion.6']=='Confirmado']
+print(bdf3conf.shape)
+bdf3conf2, ndy, cdy = ica.get_diffyear(bdf3conf, 'aaaa anulacion', '2021', 'F3')
+
+iokf3 = bdf3conf2[index_name].values
 bd = ica.get_db()
 bd.loc[iokf3, 'CIF3'] = 'OKK'
 
@@ -72,13 +75,14 @@ print('\n--------------------------------------------------------------------')
 print('## Análisis con F3 proveedor')
 print('--------------------------------------------------------------------')
 print('# Resumen: ')
-print(f'= {nfnan+ndu+nne+ndc+nanu} de {nf3p} registros con novedad, por un valor de: {cfnan+cdu+cne+cdc+canu:,.2f}')
+print(f'= {nfnan+ndu+nne+ndc+nanu+ndy} de {nf3p} registros con novedad, por un valor de: {cfnan+cdu+cne+cdc+canu+cdy:,.2f}')
 print('# Detalle: ')
 print(f'- {nfnan} de {nf3p} registros cerrados sin número de F3, por un valor de {cfnan:,.2f}')
 print(f'- {ndu} de {dff3p2.shape[0]} registros duplicados, por un valor de {cdu:,.2f}')
 print(f'- {nne} de {dff3p3.shape[0]} registros no se encontraron en la base de F3, por un valor de {cne:,.2f}')
 print(f'- {ndc} de {bdf3cant.shape[0]} registros no coinciden con cantidad de la base de F3, por un valor de {cdc:,.2f}')
 print(f'- {nanu} de {bdf3cant2.shape[0]} registros anulados en la base de F3, por un valor de {canu:,.2f}')
+print(f'- {ndy} de {bdf3cant3.shape[0]} registros no coindicen con el año de confirmación 2021, por un valor de {cdy:,.2f}')
 print(bd[[cost_column, 'CIF3', 'estatus final']].groupby(['estatus final', 'CIF3']).sum().sort_values(by=cost_column, ascending=False))
 print('--------------------------------------------------------------------')
 
@@ -97,8 +101,9 @@ nef4, nnef4, cnef4 = ica.get_notfound( dff43, f4, ['f4', 'upc'], ['nro. red. inv
 bdf4cant = pd.merge(dff43, f4, left_on=['f4','upc'], right_on=['nro. red. inventario','upc']) # Unir b2345 con F4
 bdf4cant2, ndcf4, cdcf4 = ica.get_diffqty(bdf4cant, 'unidades', 'cantidad', 'F4')
 bdf4cant3, nanuf4, canuf4 = ica.get_canceledstatus(bdf4cant2, 'estado', 'F4')
+bdf4dy, ndyf4, cdyf4 = ica.get_diffyear(bdf4cant3, 'aaaa creacion', '2021', 'F4')
 
-iokf4 = bdf4cant2[index_name].values
+iokf4 = bdf4dy[index_name].values
 bd = ica.get_db()
 bd.loc[iokf4, 'CIF4'] = 'OKK'
 
@@ -112,6 +117,7 @@ print(f'- {nduf4} de {dff42.shape[0]} registros duplicados, por un valor de {cdu
 print(f'- {nnef4} de {dff43.shape[0]} registros no se encontraron en la base de F4, por un valor de {cnef4:,.2f}')
 print(f'- {ndcf4} de {bdf4cant.shape[0]} registros no coinciden con cantidad de la base de F4, por un valor de {cdcf4:,.2f}')
 print(f'- {nanuf4} de {bdf4cant2.shape[0]} registros anulados en la base de F4, por un valor de {canuf4:,.2f}')
+print(f'- {ndyf4} de {bdf4cant3.shape[0]} registros no coindicen con el año de confirmación 2021, por un valor de {cdyf4:,.2f}')
 print(bd[[cost_column, 'CIF4', 'estatus final']].groupby(['estatus final', 'CIF4']).sum().sort_values(by=cost_column, ascending=False))
 print('--------------------------------------------------------------------')
 
@@ -137,7 +143,7 @@ print('# Detalle: ')
 print(f'- {nfnankpi} de {nkpi} registros cerrados sin número de F12, por un valor de {cfnankpi:,.2f}')
 print(f'- {ndukpi} de {dfkpi2.shape[0]} registros duplicados, por un valor de {cdukpi:,.2f}')
 print(f'- {nnekpi} de {dfkpi3.shape[0]} registros no se encontraron en la base de KPI, por un valor de {cnekpi:,.2f}')
-print(f'- {ndykpi} de {bdkpi_year.shape[0]} registros no coindicen con el año 2021, por un valor de {cdykpi:,.2f}')
+print(f'- {ndykpi} de {bdkpi_year.shape[0]} registros no coindicen con el año paletiza 2021, por un valor de {cdykpi:,.2f}')
 print('--------------------------------------------------------------------') 
 
 """ # Tareas finales 

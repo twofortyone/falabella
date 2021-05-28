@@ -100,3 +100,29 @@ class InternalControlAnalysis:
         self.db.loc[idiffyear, 'CI'+numf] = 'NAA'
         bdquery_res = bdquery[bdquery[yearcol]==year]
         return bdquery_res, diffyear.shape[0], diffyear[self.cost_column].sum()
+
+    def get_diffvalue(self, bdquery, valuecol, value, numf, note):
+        """ 
+        Get rows with different value 
+        :param bdquery: dataframe to query
+        :param valuecol: (string) value column 
+        :param value: (string) value of comparison 
+        """
+        diffvalue = bdquery[bdquery[valuecol]!=value]
+        idiffvalue = diffvalue[self.index_column].values
+        self.db.loc[idiffvalue, 'CI'+numf] = note
+        bdquery_res = bdquery[bdquery[valuecol]==value]
+        return bdquery_res, diffvalue.shape[0], diffvalue[self.cost_column].sum()
+
+    def get_equalvalue(self, bdquery, valuecol, value, numf, note):
+        """ 
+        Get rows with different value 
+        :param bdquery: dataframe to query
+        :param valuecol: (string) value column 
+        :param value: (string) value of comparison 
+        """
+        equalvalue = bdquery[bdquery[valuecol]==value]
+        iequalvalue = equalvalue[self.index_column].values
+        self.db.loc[iequalvalue, 'CI'+numf] = note
+        bdquery_res = bdquery[bdquery[valuecol]!=value]
+        return bdquery_res, equalvalue.shape[0], equalvalue[self.cost_column].sum()
