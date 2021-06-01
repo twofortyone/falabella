@@ -16,7 +16,7 @@ index_name = 'indice_b7'
 cost_column = 'ct'
 
 # Importar bases
-kpi = pd.read_csv('input/kpi.csv', sep=';', dtype='object')
+kpi = pd.read_csv('input/210528-153310-kpi.csv', sep=';', dtype='object')
 b7 = pd.read_csv('input/base7.csv', sep=';', dtype='object')
 
 # Normalizar nombres de columnsa 
@@ -48,7 +48,7 @@ dfkpi2, ndy, cdy = ica.get_diffyear(dfkpi, 'aaaa paletiza', '2021', 'KPI')
 iokkpi = dfkpi2[index_name].values
 b7 = ica.get_db()
 b7.loc[iokkpi, 'CIKPI'] = 'OKK'
-
+b7.loc[iokkpi, 'CIA'] = 'OKK'
 # Reporte 
 reporte = Report('b7')
 print('\n ----------------- Base 7 ----------------- ')
@@ -67,4 +67,5 @@ reporte.print_analysis(comp='KPI', comments='para tipificación CERRADO - Recibi
 # Tareas finales 
 b7.to_csv(f'output/{dt_string}-b7.csv', sep=';', decimal=',', index=False) # Guarda el archivo 
 b7mkpi = b7.merge(kpi, how='left', left_on=['f12'], right_on=['entrada'])
+b7mkpi.drop_duplicates(subset=['indice_b7'], inplace=True)
 b7mkpi.to_csv(f'output/{dt_string}-b7mkpi.csv', sep=';', decimal=',', index=False)

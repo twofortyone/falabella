@@ -55,7 +55,7 @@ cb6c= dfcerr[[cost_column]].sum()
 dfcerr2, nfnan, cfnan = ica.get_fnan( dfcerr, 'f5', 'F5')
 dfcerr3, ndu, cdu = ica.get_duplicates( dfcerr2, ['sku','cod.autorizacion'], 'F5')
 ne, nne, cne = ica.get_notfound( dfcerr3, f5, ['f5','sku'], ['transfer','sku'], 'transfer', 'F5')
-b6f5 = pd.merge(dfcerr, f5, left_on=['f5','sku'], right_on=['transfer','sku'])
+b6f5 = pd.merge(dfcerr3, f5, left_on=['f5','sku'], right_on=['transfer','sku'])
 b6f52, nnr, cnr = ica.get_diffvalue(b6f5, 'estado', 'Recibido', 'F5', 'NRE')
 b6f53, nmd, cmd = ica.get_equalvalue(b6f52, 'motivo discrepancia', 'F5 NO RECIBIDO', 'F5', 'MDNR')
 b6f54, nncc, cncc = ica.get_diffqty(b6f53, 'unidades', 'cant. recibida','F5') 
@@ -64,6 +64,7 @@ b6f54, nncc, cncc = ica.get_diffqty(b6f53, 'unidades', 'cant. recibida','F5')
 iokf3 = b6f54[index_name].values
 b6 = ica.get_db()
 b6.loc[iokf3, 'CIF5'] = 'OKK'
+b6.loc[iokf3, 'CIA'] = 'OKK'
 
 # Reporte 
 reporte = Report('b6')

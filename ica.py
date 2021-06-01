@@ -27,6 +27,7 @@ class InternalControlAnalysis:
         du = bdquery[bdquery.duplicated(cols, keep=False)]
         idu = du[self.index_column].values
         self.db.loc[idu, 'CI'+numf] = 'DUP'
+        self.db.loc[idu, 'CIA'] = 'DUP'
         bdquery_res = bdquery[~bdquery.duplicated(cols, keep=False)]
         return bdquery_res, du.shape[0], du[self.cost_column].sum()
 
@@ -41,6 +42,7 @@ class InternalControlAnalysis:
         fnan = bdquery[bdquery[col].isna()]
         inf5 = fnan[self.index_column].values
         self.db.loc[inf5, 'CI'+numf] = 'N' + numf
+        self.db.loc[inf5, 'CIA'] = 'N' + numf
         bdquery_res = bdquery[bdquery[col].notna()]
         return bdquery_res, fnan.shape[0], fnan[self.cost_column].sum()
 
@@ -55,10 +57,11 @@ class InternalControlAnalysis:
         :param col: (string)
         :param numf: (string)
         """
-        lmerge = pd.merge(bdquery, dff, how='left',left_on=leftcols, right_on=rightcols)
+        lmerge = bdquery.merge(dff, how='left',left_on=leftcols, right_on=rightcols)
         ne = lmerge[lmerge[col].isna()]
         ine = ne[self.index_column].values
-        self.db.loc[ine, 'CI'+numf] = 'NEX'
+        self.db.loc[ine, 'CI'+numf] = 'NFD'
+        self.db.loc[ine, 'CIA'] = 'NFD'
         return ne, ne.shape[0], lmerge[lmerge[col].isna()][self.cost_column].sum()
     
     def get_diffqty(self, bdquery, qty1col, qty2col, numf):
@@ -72,6 +75,7 @@ class InternalControlAnalysis:
         dc = bdquery[bdquery[qty1col]!=bdquery[qty2col]] # Registros con cantidades diferentes
         idc = dc[self.index_column].values
         self.db.loc[idc, 'CI'+ numf ] = 'NCC'
+        self.db.loc[idc, 'CIA' ] = 'NCC'
         bdquery_res = bdquery[bdquery[qty1col]==bdquery[qty2col]]
         return bdquery_res, dc.shape[0], dc[self.cost_column].sum()
 
@@ -85,6 +89,7 @@ class InternalControlAnalysis:
         anu = bdquery[bdquery[statuscol]=='Anulado']
         ianu = anu[self.index_column].values 
         self.db.loc[ianu, 'CI'+ numf] = 'ANU'
+        self.db.loc[ianu, 'CIA'] = 'ANU'
         bdquery_res = bdquery[bdquery[statuscol]!='Anulado']
         return  bdquery_res, anu.shape[0], anu[self.cost_column].sum()
 
@@ -98,6 +103,7 @@ class InternalControlAnalysis:
         diffyear = bdquery[bdquery[yearcol]!=year]
         idiffyear = diffyear[self.index_column].values
         self.db.loc[idiffyear, 'CI'+numf] = 'NAA'
+        self.db.loc[idiffyear, 'CIA'] = 'NAA'
         bdquery_res = bdquery[bdquery[yearcol]==year]
         return bdquery_res, diffyear.shape[0], diffyear[self.cost_column].sum()
 
@@ -111,6 +117,7 @@ class InternalControlAnalysis:
         diffvalue = bdquery[bdquery[valuecol]!=value]
         idiffvalue = diffvalue[self.index_column].values
         self.db.loc[idiffvalue, 'CI'+numf] = note
+        self.db.loc[idiffvalue, 'CIA'] = note
         bdquery_res = bdquery[bdquery[valuecol]==value]
         return bdquery_res, diffvalue.shape[0], diffvalue[self.cost_column].sum()
 
@@ -124,5 +131,6 @@ class InternalControlAnalysis:
         equalvalue = bdquery[bdquery[valuecol]==value]
         iequalvalue = equalvalue[self.index_column].values
         self.db.loc[iequalvalue, 'CI'+numf] = note
+        self.db.loc[iequalvalue, 'CIA'] = note
         bdquery_res = bdquery[bdquery[valuecol]!=value]
         return bdquery_res, equalvalue.shape[0], equalvalue[self.cost_column].sum()
