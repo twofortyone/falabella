@@ -7,7 +7,7 @@ now = datetime.now()
 dt_string = now.strftime("%y%m%d-%H%M%S")
 
 # Lee el archivo F4 original
-f4 = pd.read_csv('f4-1805.txt', sep=';', dtype='object')
+f4 = pd.read_csv('input/f40602.csv', sep=';', dtype='object', encoding='ISO-8859-1')
 
 shape_v1 = f4.shape  # Obtiene la dimensión del dataframe
 
@@ -30,11 +30,13 @@ faux = f4.copy()
 
 for i in indice:
     f4.loc[i-1, 'Destino':'Total Precio Costo'] = faux.loc[i,'Nro. Red. Inventario':'Linea'].values
-
+    
+f4.to_csv(dt_string + '-f4-error.csv', sep=';', index=False)
+f4['Nro. Red. Inventario'].fillna('N/A', inplace=True)
 f4 = f4[(f4['Nro. Red. Inventario'].str.isdigit()) & (~f4['Nro. Red. Inventario'].str.startswith('1'))]
 
 # Extraer el F11
-f4['F11'] = f4.Destino.str.extract('(\d{4}.*\d{4})')  # Extrae el valor F11
+f4['F11'] = f4.Destino.str.extract('(\d{8,})')  # Extrae el valor F11
 f4.to_csv(dt_string + '-f4-output.csv', sep=';', index=False)
 num_fonces = f4['F11'].notna().sum()
 
