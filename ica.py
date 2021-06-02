@@ -1,6 +1,5 @@
 import pandas as pd
 from datetime import datetime
-from unidecode import unidecode
 import numpy as np
 
 class InternalControlAnalysis:
@@ -13,6 +12,7 @@ class InternalControlAnalysis:
         self.db = db
         self.index_column = indexcol
         self.cost_column = costcol 
+        self.dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
 
     def get_db(self):
         return self.db
@@ -40,6 +40,7 @@ class InternalControlAnalysis:
         :param numf: (string)
         """
         fnan = bdquery[bdquery[col].isna()]
+        #fnan.to_csv(f'output/{self.dt_string}-fnan.csv', sep=';', decimal=',', index=False) 
         inf5 = fnan[self.index_column].values
         self.db.loc[inf5, 'CI'+numf] = 'N' + numf
         self.db.loc[inf5, 'CIA'] = 'N' + numf
@@ -62,7 +63,7 @@ class InternalControlAnalysis:
         ine = ne[self.index_column].values
         self.db.loc[ine, 'CI'+numf] = 'NFD'
         self.db.loc[ine, 'CIA'] = 'NFD'
-        return ne, ne.shape[0], lmerge[lmerge[col].isna()][self.cost_column].sum()
+        return ine, ne.shape[0], lmerge[lmerge[col].isna()][self.cost_column].sum()
     
     def get_diffqty(self, bdquery, qty1col, qty2col, numf):
         """ 
