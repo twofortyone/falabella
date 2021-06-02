@@ -1,7 +1,6 @@
 from os import path
 import pandas as pd
 from datetime import datetime
-from unidecode import unidecode
 import numpy as np
 from cleaning import CleaningText as ct 
 from ica import InternalControlAnalysis 
