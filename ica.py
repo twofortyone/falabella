@@ -26,10 +26,9 @@ class InternalControlAnalysis:
         """
         du = bdquery[bdquery.duplicated(cols, keep=False)]
         idu = du[self.index_column].values
-        self.db.loc[idu, 'CI'+numf] = 'DUP'
-        self.db.loc[idu, 'CIA'] = 'DUP'
+        self.db.loc[idu, 'GCO'] = 'DUPLICADO'
         bdquery_res = bdquery[~bdquery.duplicated(cols, keep=False)]
-        return bdquery_res, du.shape[0], du[self.cost_column].sum()
+        return bdquery_res
 
 
     def get_fnan(self, bdquery, col, numf):
@@ -42,11 +41,23 @@ class InternalControlAnalysis:
         fnan = bdquery[bdquery[col].isna()]
         #fnan.to_csv(f'output/{self.dt_string}-fnan.csv', sep=';', decimal=',', index=False) 
         inf5 = fnan[self.index_column].values
-        self.db.loc[inf5, 'CI'+numf] = 'N' + numf
-        self.db.loc[inf5, 'CIA'] = 'N' + numf
+        self.db.loc[inf5, 'GCO'] = 'N' + numf
         bdquery_res = bdquery[bdquery[col].notna()]
-        return bdquery_res, fnan.shape[0], fnan[self.cost_column].sum()
-
+        return bdquery_res
+    
+    def get_fnan_cols(self, bdquery, cols, numf):
+        """
+        Get rows with nan in F value
+        :param bdquery: dataframe to identify duplicates
+        :param col: (string)
+        :param numf: (string)
+        """
+        fnan = bdquery[bdquery[cols].isna().all(1)]
+        #fnan.to_csv(f'output/{self.dt_string}-fnan.csv', sep=';', decimal=',', index=False) 
+        inf5 = fnan[self.index_column].values
+        self.db.loc[inf5, 'GCO'] = 'N' + numf
+        bdquery_res = bdquery[bdquery[cols].notna().any(1)]
+        return bdquery_res
 
     def get_notfound(self, bdquery, dff, leftcols, rightcols, col, numf):
         """
@@ -60,10 +71,10 @@ class InternalControlAnalysis:
         """
         lmerge = bdquery.merge(dff, how='left',left_on=leftcols, right_on=rightcols)
         ne = lmerge[lmerge[col].isna()]
+        #ne.to_csv(f'output/{self.dt_string}-ne-{numf}.csv', sep=';', decimal=',', index=False) 
         ine = ne[self.index_column].values
-        self.db.loc[ine, 'CI'+numf] = 'NFD'
-        self.db.loc[ine, 'CIA'] = 'NFD'
-        return ine, ne.shape[0], lmerge[lmerge[col].isna()][self.cost_column].sum()
+        self.db.loc[ine, 'GCO'] = 'NFOUND'
+        return ine
     
     def get_diffqty(self, bdquery, qty1col, qty2col, numf):
         """ 
@@ -75,10 +86,9 @@ class InternalControlAnalysis:
         """
         dc = bdquery[bdquery[qty1col]!=bdquery[qty2col]] # Registros con cantidades diferentes
         idc = dc[self.index_column].values
-        self.db.loc[idc, 'CI'+ numf ] = 'NCC'
-        self.db.loc[idc, 'CIA' ] = 'NCC'
+        self.db.loc[idc, 'GCO' ] = 'NCCANT'
         bdquery_res = bdquery[bdquery[qty1col]==bdquery[qty2col]]
-        return bdquery_res, dc.shape[0], dc[self.cost_column].sum()
+        return bdquery_res
 
     def get_canceledstatus(self, bdquery, statuscol, numf):
         """ 
@@ -89,10 +99,9 @@ class InternalControlAnalysis:
         """
         anu = bdquery[bdquery[statuscol]=='Anulado']
         ianu = anu[self.index_column].values 
-        self.db.loc[ianu, 'CI'+ numf] = 'ANU'
-        self.db.loc[ianu, 'CIA'] = 'ANU'
+        self.db.loc[ianu, 'GCO'] = 'ANULADO'
         bdquery_res = bdquery[bdquery[statuscol]!='Anulado']
-        return  bdquery_res, anu.shape[0], anu[self.cost_column].sum()
+        return  bdquery_res
 
     def get_diffyear(self, bdquery, yearcol, year, numf):
         """ 
@@ -103,10 +112,9 @@ class InternalControlAnalysis:
         """
         diffyear = bdquery[bdquery[yearcol]!=year]
         idiffyear = diffyear[self.index_column].values
-        self.db.loc[idiffyear, 'CI'+numf] = 'NAA'
-        self.db.loc[idiffyear, 'CIA'] = 'NAA'
+        self.db.loc[idiffyear, 'GCO'] = 'NANO'
         bdquery_res = bdquery[bdquery[yearcol]==year]
-        return bdquery_res, diffyear.shape[0], diffyear[self.cost_column].sum()
+        return bdquery_res
 
     def get_diffvalue(self, bdquery, valuecol, value, numf, note):
         """ 
@@ -117,10 +125,9 @@ class InternalControlAnalysis:
         """
         diffvalue = bdquery[bdquery[valuecol]!=value]
         idiffvalue = diffvalue[self.index_column].values
-        self.db.loc[idiffvalue, 'CI'+numf] = note
-        self.db.loc[idiffvalue, 'CIA'] = note
+        self.db.loc[idiffvalue, 'GCO'] = note
         bdquery_res = bdquery[bdquery[valuecol]==value]
-        return bdquery_res, diffvalue.shape[0], diffvalue[self.cost_column].sum()
+        return bdquery_res
 
     def get_equalvalue(self, bdquery, valuecol, value, numf, note):
         """ 
@@ -131,7 +138,19 @@ class InternalControlAnalysis:
         """
         equalvalue = bdquery[bdquery[valuecol]==value]
         iequalvalue = equalvalue[self.index_column].values
-        self.db.loc[iequalvalue, 'CI'+numf] = note
-        self.db.loc[iequalvalue, 'CIA'] = note
+        self.db.loc[iequalvalue, 'GCO'] = note
         bdquery_res = bdquery[bdquery[valuecol]!=value]
-        return bdquery_res, equalvalue.shape[0], equalvalue[self.cost_column].sum()
+        return bdquery_res
+
+    def get_menorvalue(self, bdquery, valuecol, value, numf, note):
+        """ 
+        Get rows with different value 
+        :param bdquery: dataframe to query
+        :param valuecol: (string) value column 
+        :param value: (string) value of comparison 
+        """
+        equalvalue = bdquery[bdquery[valuecol]>value]
+        iequalvalue = equalvalue[self.index_column].values
+        self.db.loc[iequalvalue, 'GCO'] = note
+        bdquery_res = bdquery[bdquery[valuecol]<=value]
+        return bdquery_res

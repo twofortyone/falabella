@@ -7,11 +7,8 @@ now = datetime.now()
 dt_string = now.strftime("%y%m%d-%H%M%S")
 
 # Lee el archivo F4 original
-<<<<<<< HEAD
-f4 = pd.read_csv('input/f40602.csv', sep=';', dtype='object', encoding='ISO-8859-1')
-=======
-f4 = pd.read_csv('input/cierresf11s/f40602.csv', sep=';', dtype='object')
->>>>>>> b2967c87a7e7fd9aaacae0c78aaec0c044db2fa2
+
+f4 = pd.read_csv('input/f40603.txt', sep=';', dtype='object', encoding='ISO-8859-1')
 
 shape_v1 = f4.shape  # Obtiene la dimensión del dataframe
 
@@ -40,11 +37,8 @@ f4['Nro. Red. Inventario'].fillna('N/A', inplace=True)
 f4 = f4[(f4['Nro. Red. Inventario'].str.isdigit()) & (~f4['Nro. Red. Inventario'].str.startswith('1'))]
 
 # Extraer el F11
-<<<<<<< HEAD
 f4['F11'] = f4.Destino.str.extract('(\d{8,})')  # Extrae el valor F11
-=======
-f4['F11'] = f4.Destino.str.extract('(\d{9})')  # Extrae el valor F11
->>>>>>> b2967c87a7e7fd9aaacae0c78aaec0c044db2fa2
+
 f4.to_csv(dt_string + '-f4-output.csv', sep=';', index=False)
 num_fonces = f4['F11'].notna().sum()
 

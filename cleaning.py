@@ -26,9 +26,12 @@ class CleaningText:
         bd.columns = cols
         return bd
 
-
     def convertir_a_numero(bd, cols):
-        bd[cols] = bd[cols].apply(lambda x: x.str.strip('.!?$ \n\t').str.replace(
+        bd[cols] = bd[cols].apply(lambda x: x.fillna('N/A').str.strip('.!?$ \n\t').str.replace(
             '.', '', regex=False).str.replace(',', '.', regex=False))
         bd[cols] = bd[cols].apply(pd.to_numeric, downcast='float')
+        return bd
+        
+    def limpiar_cols(bd, cols):
+        bd[cols] = bd[cols].apply(lambda x: x.str.strip('.!?$ \n\t').str.lower())
         return bd
