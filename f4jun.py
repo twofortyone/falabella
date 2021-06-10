@@ -4,7 +4,7 @@ import numpy as np
 
 # Verificar para cada archivo 
 num_f4_files = 2
-f4_input_name = '3105_f4_20' # Prefijo del nombre del archivo 
+f4_input_name = '210608_f4' # Prefijo del nombre del archivo 
 #--------------------------------------------------------------
 f4 = None 
 list_f4 = []
@@ -25,12 +25,12 @@ def delete_initial_rows(inf4, i=0):
 if num_f4_files > 1: 
     for i in range(num_f4_files): 
         f4_name = delete_initial_rows(f'input/{f4_input_name}_{i}.txt', i)
-        f4_aux = pd.read_csv(f'input/{f4_name}', sep=';', dtype='object')
+        f4_aux = pd.read_csv(f'input/{f4_name}', sep=';', dtype='object', error_bad_lines=False)
         list_f4.append(f4_aux)
     f4 = pd.concat(list_f4, axis=0)
 else:
     f4_name = delete_initial_rows(f'input/{f4_input_name}.txt')
-    f4 = pd.read_csv('input/'+ f4_name, sep=';', dtype='object')
+    f4 = pd.read_csv('input/'+ f4_name, sep=';', dtype='object', error_bad_lines=False)
 
 # Limpieza del f4 
 

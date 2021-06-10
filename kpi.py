@@ -8,7 +8,7 @@ from cleaning import CleaningText as ct
 now = datetime.now()
 dt_string = now.strftime("%y%m%d-%H%M%S")
 
-kpi = pd.read_csv('input/cierresf11s/3105_kpi.csv', sep=';', dtype='object')
+kpi = pd.read_excel('input/210608_kpi.xlsx', dtype='object')
 kpi = ct.normalizar_cols(kpi)
 kpi.rename(columns={'index': 'ind'}, inplace=True)
 

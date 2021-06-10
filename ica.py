@@ -89,6 +89,22 @@ class InternalControlAnalysis:
         self.db.loc[idc, 'GCO' ] = 'NCCANT'
         bdquery_res = bdquery[bdquery[qty1col]==bdquery[qty2col]]
         return bdquery_res
+    
+    def get_diffqty_pro(self, bdquery, qty1col, qty2col, fl, ff):
+        """ 
+        Get rows with different quantity
+        :param bdquery: dataframe to identify different quantity
+        :param qty1col: (string) quantity 1 
+        :param qty2col: (string) quantity 2 
+        """
+        s = bdquery[[fl, ff,qty1col, qty2col]].groupby([fl, ff]).sum().reset_index()
+        fs = list(s[s.qproducto>s.cantidad][fl].values)
+        dc = bdquery[bdquery[fl].isin(fs)] # Registros con cantidades diferentes
+        idc = dc[self.index_column].values
+        self.db.loc[idc, 'GCO' ] = 'NCCANT'
+        bdquery_res = bdquery[~bdquery[fl].isin(fs)]
+        return bdquery_res
+
 
     def get_canceledstatus(self, bdquery, statuscol, numf):
         """ 
