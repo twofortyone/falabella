@@ -2,7 +2,7 @@
 from os import sep
 import pandas as pd
 from datetime import datetime
-from cleaning import CleaningText as ct 
+from cl_cleaning import CleaningText as ct 
 
 # Variables
 now = datetime.now()

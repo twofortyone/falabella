@@ -1,10 +1,9 @@
 import pandas as pd
 from datetime import datetime
-import numpy as np
 
 # Verificar para cada archivo 
-num_f4_files = 2
-f3_input_name = '210608_f3_0' # Prefijo del nombre del archivo 
+num_f4_files = 1
+f3_input_name = '210611_f3_0' # Prefijo del nombre del archivo 
 #--------------------------------------------------------------
 dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
 
@@ -26,9 +25,10 @@ fv1 = f3[f3['Fecha Reserva'].notna()]
 rega = fv1.shape[0]
 indice = fv1.loc[fv1['Nro Devolucion'].isnull(),:].index
 
-# Recorre Fecha reserva para actualizar los valores de F11 desplazados 
+# Recorre Fecha reserva para actualizar los valores de F11 desplazados
+faux = fv1.copy() 
 for i in indice:
-    fv1.loc[i-1,'Folio F11'] = fv1.loc[i,'Fecha Reserva']
+    fv1.loc[i-1,'Folio F11'] = faux.loc[i,'Fecha Reserva']
 
 print('Existen ' + str(indice.shape[0]) + ' registros de F11s desplazados')
 fv1 = fv1[fv1['Nro Devolucion'].notnull()]

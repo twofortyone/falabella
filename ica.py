@@ -168,7 +168,7 @@ class InternalControlAnalysis:
         bdquery_res = bdquery[bdquery[valuecol]!=value]
         return bdquery_res
 
-    def get_menorvalue(self, bdquery, valuecol, value, note):
+    def get_menorvalue(self, bdquery, valuecol, value, note, comment):
         """ 
         Get rows with different value 
         :param bdquery: dataframe to query
@@ -176,7 +176,13 @@ class InternalControlAnalysis:
         :param value: (string) value of comparison 
         """
         equalvalue = bdquery[bdquery[valuecol]>value]
-        iequalvalue = equalvalue[self.index_column].values
-        self.db.loc[iequalvalue, 'GCO'] = note
+        imvalue = equalvalue[self.index_column].values
+        self.db.loc[imvalue, 'GCO'] = note
+        self.db.loc[imvalue, 'Comentario GCO'] = comment
         bdquery_res = bdquery[bdquery[valuecol]<=value]
         return bdquery_res
+
+"""     def get_inlist(self, bquery, valuecol, value, list, note, comment):
+        inlist 
+        self.db.loc[iequalvalue, 'GCO'] = note
+        self.db.loc[iequalvalue, 'Comentario GCO'] = comment """

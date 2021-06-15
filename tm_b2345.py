@@ -2,7 +2,7 @@ from os import path
 import pandas as pd
 from datetime import datetime
 import numpy as np
-from cleaning import CleaningText as ct 
+from cl_cleaning import CleaningText as ct 
 from ica import InternalControlAnalysis 
 
 # Configuraciones 
