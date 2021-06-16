@@ -15,6 +15,8 @@ dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
 index_name = 'indice_bc11'
 cost_column = 'total_costo_promedio'
 status_column = 'status nuevo'
+qty_column = 'qproducto'
+upc_column = 'prd_upc'
 
 f3_name = '210616-082924-f3.csv'
 f4_name = '210616-100307-f4-output.csv'
@@ -23,6 +25,7 @@ bc11_name = '210616_cierre_f11.csv'
 
 f12_col ='f12'
 f4_col ='f4 nuevo'
+f5_col = 'f5'
 f3_col = 'f3nuevo'
 f11_col = 'nfolio'
 
@@ -95,72 +98,18 @@ bc11.reset_index(inplace=True)
 bc11.rename(columns={'index': index_name}, inplace=True)
 bc11[status_column] = bc11[status_column].apply(unidecode)
 
-ica = InternalControlAnalysis(bc11, index_name, cost_column)
+ica = InternalControlAnalysis(bc11, index_name, cost_column, status_column, qty_column, upc_column)
+ica.set_fcols([f3_col, f4_col, f5_col, f11_col, f12_col])
 
-# Funciones 
+#ica.f4_verify(f4, 'f4 de merma-2020', '2020')
+lista_f4_2021 = ['cierre x f4 cobrado a terceros', 'f4 de merma', 'error en cierre de f11', 'error en creacion de f11','politica cambio agil','cierre x f4 dado baja crate prestamos']
+for status_nuevo in lista_f4_2021:
+    ica.f4_verify(f4, status_nuevo, '2021')
 
-def cierre_f5(bd, status):
-    df1 = bd[bd[status_column]==status]
-    df2 = ica.get_fnan( df1, 'f5', 'F5')
-    df3 = ica.get_duplicates( df2, [f12_col,'prd_upc', 'qproducto'], 'F12 + UPC + Cantidad')
-    ne = ica.get_notfound( df3, f5, ['f5','prd_upc'], ['transfer','upc'], 'transfer', 'F5|UPC|Qty')
-    df4 = pd.merge(df3, f5, left_on=['f5','prd_upc'], right_on=['transfer','upc'])
-    df5 = ica.get_diffvalue(df4, 'estado', 'Recibido', 'NRE', 'Registro con estado diferente a recibido')
-    df6 = ica.get_equalvalue(df5, 'motivo discrepancia', 'F5 NO RECIBIDO', 'MDI', 'Registro con motivo de disc: F5 no recibido')
-    df7 = ica.get_diffvalue(df6, 'aaaa reserva', '2021', 'NAA', 'Registro con año de reserva diferente a 2021')
-    comment = 'La cantidad sumada de los cod. aut. nc de un F5 es mayor que la cantidad del F5'
-    #df8 = ica.get_diffqty_pro(df7, 'qproducto', 'cant. recibida', 'cod_aut_nc', 'transfer', comment)
-    iokf5 = df7[index_name].values
-    ica.update_db(iokf5, 'GCO','OKK')
-    ica.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY')
+ica.f3_verify(f3, 'cierre x f3 devuelto a proveedor', '2021')
+ica.f5_verify(f5, 'producto en tienda', '2021', f11_col)
 
-def cierre_f4(bd, status):
-    df1 = bd[bd[status_column]==status]
-    df2 = ica.get_fnan( df1, f4_col, 'F4')
-    df3 = ica.get_duplicates( df2, [f12_col,'prd_upc', 'qproducto'], 'F12 + UPC + Cantidad')
-    ne = ica.get_notfound( df3, f4, [f4_col,'prd_upc'], ['nro. red. inventario','upc'], 'nro. red. inventario', 'F4|UPC|QTY')
-    df4 = pd.merge(df3, f4, left_on=[f4_col,'prd_upc'], right_on=['nro. red. inventario','upc'])
-    df5 = ica.get_equalvalue(df4, 'estado', 'Anulado', 'ANU', 'Registro anulado')
-    df6 = ica.get_diffvalue(df5, 'aa creacion', '2021', 'NAA', 'Registro con año de creación diferente a 2021')
-    df7 = ica.get_diffqty_pro(df6, 'qproducto', 'cantidad',f11_col, f4_col, 'La cantidad sumada de los F11s de un F4 es mayor que la cantidad del F4')
-    iokf4 = df7[index_name].values
-    ica.update_db(iokf4,'GCO', 'OKK')
-    ica.update_db(iokf4,'Comentario GCO', 'Coincidencia exacta F4+UPC+QTY')
-
-def cierre_f4_pendientes(bd, status):
-    df1 = bd[bd[status_column]==status]
-    df2 = ica.get_fnan( df1, f4_col, 'F4')
-    iokf4 = df2[index_name].values
-    ica.update_db(iokf4,'GCO', 'OKK')
-    ica.update_db(iokf4,'Comentario GCO', 'Coincidencia exacta F4+UPC+QTY')
-
-def cierre_f420(bd, status):
-    df1 = bd[bd[status_column]==status]
-    df2 = ica.get_fnan( df1, f4_col, 'F4')
-    df3 = ica.get_duplicates( df2, [f12_col,'prd_upc', 'qproducto'], 'F12 + UPC + Cantidad')
-    ne = ica.get_notfound( df3, f4, [f4_col,'prd_upc'], ['nro. red. inventario','upc'], 'nro. red. inventario', 'F4|UPC|QTY')
-    df4 = pd.merge(df3, f4, left_on=[f4_col,'prd_upc'], right_on=['nro. red. inventario','upc'])
-    df5 = ica.get_equalvalue(df4, 'estado', 'Anulado', 'ANU', 'Registro anulado')
-    df6 = ica.get_diffvalue(df5, 'aa creacion', '2020', 'NAA', 'Registro con año de creación diferente a 2021')
-    df7 = ica.get_diffqty_pro(df6, 'qproducto', 'cantidad',f11_col, f4_col, 'La cantidad sumada de los F11s de un F4 es mayor que la cantidad del F4')
-    iokf4 = df7[index_name].values
-    ica.update_db(iokf4,'GCO', 'OKK')
-    ica.update_db(iokf4,'Comentario GCO', 'Coincidencia exacta F4+UPC+QTY')
-
-def cierre_f3(bd):
-    df1 = bd[bd[status_column]=='cierre x f3 devuelto a proveedor']
-    df2= ica.get_fnan( df1, f3_col, 'F3')
-    df3 = ica.get_duplicates( df2,[f12_col,'prd_upc', 'qproducto'], 'F12 + UPC + Cantidad')
-    ne = ica.get_notfound( df3, f3, [f3_col,'prd_upc'], ['nro devolucion','upc'], 'nro devolucion', 'F3|UPC|QTY')
-    df4 = pd.merge(df3, f3, left_on=[f3_col,'prd_upc'], right_on=['nro devolucion','upc'])
-    df5 = ica.get_equalvalue(df4, 'descripcion.6', 'Anulado', 'ANU', 'Registro anulado')
-    df6 = ica.get_diffqty_pro(df5, 'qproducto', 'cantidad',f11_col, f3_col,'La cantidad sumada de los f11s de un f3 es mayor que la cantidad del f3')
-    iokf3 = df6[index_name].values
-    ica.update_db(iokf3,'GCO', 'OKK')
-    ica.update_db(iokf3,'Comentario GCO', 'Coincidencia exacta F3+UPC+QTY')
-    df7 = df6[df6['descripcion.6']=='Confirmado']
-    df8= ica.get_diffvalue(df7, 'aaaa anulacion', '2021', 'NAA', 'Registro con año de confirmación diferente a 2021')
-
+# Funciones
 def cierre_kpi(bd, status, yyyy, commenty): 
     df1 = bd[bd[status_column]==status]
     df2= ica.get_fnan_cols(df1, [f12_col,f11_col], 'KPID')
@@ -195,20 +144,9 @@ def cierre_refact(bd, status):
     ica.update_db(iokf12,'GCO', 'OKK')
     ica.update_db(iokf12,'Comentario GCO', 'Coincidencia exacta')
 
-
-cierre_f4(bc11, 'cierre x f4 cobrado a terceros')
-cierre_f4(bc11, 'f4 de merma')
-#cierre_f420(bc11, 'f4 de merma-2020')
-cierre_f3(bc11)
 cierre_kpi(bc11, 'cierre x producto guardado despues de inventario', '2021', 'Recibido antes de 2021')
 cierre_kpi(bc11, 'cierre x producto guardado antes de inventario', '0000', 'Recibido después del 20 de enero de 2021')
 cierre_refact(bc11, 'cierre x recupero con cliente - refacturacion - base fal.com')
-
-lista_pendientes = ['error en cierre de f11', 'error en creacion de f11','politica cambio agil','cierre x f4 dado baja crate prestamos']
-for snuevo in lista_pendientes:
-    cierre_f4_pendientes(bc11, snuevo)
-
-cierre_f5(bc11,'producto en tienda')
 
 # # Tareas finales 
 bc11 = ica.get_db()
