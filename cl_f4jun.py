@@ -4,7 +4,7 @@ import numpy as np
 
 # Verificar para cada archivo 
 num_f4_files = 2
-f4_input_name = '210611_f4' # Prefijo del nombre del archivo 
+f4_input_name = '210616_f4' # Prefijo del nombre del archivo 
 #--------------------------------------------------------------
 f4 = None 
 list_f4 = []

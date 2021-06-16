@@ -61,6 +61,7 @@ class InternalControlAnalysis:
         #fnan.to_csv(f'output/{self.dt_string}-fnan.csv', sep=';', decimal=',', index=False) 
         inf5 = fnan[self.index_column].values
         self.db.loc[inf5, 'GCO'] = 'N' + numf
+        self.db.loc[inf5, 'Comentario GCO'] = 'No existe número de ' + numf
         bdquery_res = bdquery[bdquery[cols].notna().any(1)]
         return bdquery_res
 
@@ -181,6 +182,15 @@ class InternalControlAnalysis:
         self.db.loc[imvalue, 'Comentario GCO'] = comment
         bdquery_res = bdquery[bdquery[valuecol]<=value]
         return bdquery_res
+        
+    def f4_verify():
+        pass
+
+    def f5_verify():
+        pass 
+
+    def f3_verify():
+        pass
 
 """     def get_inlist(self, bquery, valuecol, value, list, note, comment):
         inlist 
