@@ -1,8 +1,9 @@
+from os import dup
 import pandas as pd
 from datetime import datetime
 import numpy as np
 from cl_cleaning import CleaningText as ct 
-from ica import InternalControlAnalysis
+from ica_nc import InternalControlAnalysis
 from report import Report 
 from unidecode import unidecode
 from tqdm import tqdm
@@ -11,23 +12,42 @@ pd.set_option('float_format', '{:,.2f}'.format)
 pd.set_option('display.max_columns', 70)
 
 dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
+
+cts = ['9913','9917','9919','9920','9918','9912','9914']
+preventas = ['9904','9905','9908','9909','9915','9916']
+tiendas = ['139','141','142','143','5','37','35','43','53','36','38','98','138',
+'45','72','183','25','123','19','50','85','101','321','323','324','108','6','18','82',
+'93','322','13','56','96','131','60']
+# --------------------------------------------------------------------------------------------
+# TODO Check values 
 index_name = 'indice_f5'
 cost_column = 'ct'
 status_column = 'tipmc'
+qty_column = 'cantidad_trx_actual'
+upc_column = 'upc'
 f5_col = 'f5'
+f3_col = 'f3'
 f4_col = 'f4'
+f11_col= 'f11'
+# --------------------------------------------------------------------------------------------
+f5 = pd.read_csv(f'input/nc_3000/210617/210610-162143-f5-output.csv', sep=';', dtype='object')
+f4 = pd.read_csv(f'input/nc_3000/210617/210616-100307-f4-output.csv', sep=';', dtype='object')
+kpi = pd.read_csv(f'input/nc_3000/210617/210616-101000-kpi.csv', sep=';', dtype='object')
+nc = pd.read_csv(f'input/nc_3000/210617/210617_nc.csv', sep=';', dtype='object')
+f3 = pd.read_csv(f'input/nc_3000/210617/210616-082924-f3.csv', sep=';', dtype='object')
+refact = pd.read_csv(f'input/nc_3000/210617/210616-refact.csv', sep=';', dtype='object')
 
-f5 = pd.read_csv(f'input/210610-162143-f5-output.csv', sep=';', dtype='object')
-f4 = pd.read_csv(f'input/210611-095742-f4-output.csv', sep=';', dtype='object')
-nc = pd.read_csv(f'input/210610-nc.csv', sep=';', dtype='object')
 nc.drop(nc.columns[77:108], axis=1, inplace=True)
 f5 = ct.normalizar_cols(f5)
 f4 = ct.normalizar_cols(f4)
+f3 = ct.normalizar_cols(f3)
+kpi = ct.normalizar_cols(kpi)
 nc = ct.normalizar_cols(nc)
+refact = ct.normalizar_cols(refact)
+
 f5 = ct.convertir_a_numero(f5, ['cant. recibida'])
 f4 = ct.convertir_a_numero(f4, ['cantidad'])
 nc = ct.convertir_a_numero(nc, [cost_column,'cantidad_trx_actual'])
-
 
 #TODO cambiar fechas de texto a date 
 colsf5 = ['fe. reserva', 'fe. envo', 'fe. recep']
@@ -53,11 +73,20 @@ f4.drop([ 'local', 'desc. local', 'tipo red.inv', 'usuario creacion', 'fecha res
         'subclase', 'descripcion subclase','nro. producto', 'precio vta', 
        'precio costo', 'total precio vta', 'total precio costo',], axis=1, inplace = True)
 
+f3.drop([ 'nro guia', 'tipo producto', 'marca', 'subclase', 'descripcion.1', 'clase',
+       'descripcion.2', 'sublinea', 'descripcion.3', 'linea', 'descripcion.4',
+       'proveedor', 'rut proveedor', 'descripcion.5', 'estado', 'cant*costo', 'cant*costoprmd',
+       'diferencia', 'cant*precio', 'tipo documento para dev',
+       'usuario que confirma', 'nc proveedor'], axis=1, inplace=True )
+
 nc.reset_index(inplace=True)
 nc.rename(columns={'index': index_name}, inplace=True)
 cerrado = nc[nc['esmc']=='CERRADO']
 
-ica = InternalControlAnalysis(nc, index_name, cost_column)
+ica = InternalControlAnalysis(nc, index_name, cost_column, status_column, qty_column, upc_column)
+ica.set_fcols([])
+ica.set_fcols([f3_col, f4_col, f5_col, f11_col,'','cod_aut_nc'])
+#TODO fix f12 number in f4_verify
 
 def cierre_f5(bd, status):
     df1 = bd[bd[status_column]==status]
@@ -91,25 +120,30 @@ def cierre_f4(bd, status):
     ica.update_db(iokf5, 'GCO','OKK')
     ica.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY') 
 
-
-""" lista_tipmc_f5 = ['CON MC ASOCIADA','COMPENSACIÓN CON CT VERDE','SE ASOCIA F11-CONCILIACION CON TRANSPORTADORA',
-'CON QUIEBRE ASOCIADO','CON F11 TIPO CLIENTE ASOCIADO','COMPENSACIÓN CON TIENDA','SE ASOCIA F3-DEVUELTO A PROVEEDOR',
-'CON RO ASOCIADO','COMPENSACIÓN CON DVD ADMINISTRATIVO','COMPENSACIÓN CON PREVENTAS','COMPENSA CON LOCAL DE VENTA/ANULADO X USER',
-'COMPENSACIÓN CON CT CIUDADES']
+lista_tipmc_f5 = ['CON MC ASOCIADA','COMPENSACIÓN CON CT VERDE','SE ASOCIA F11-CONCILIACION CON TRANSPORTADORA',
+'CON QUIEBRE ASOCIADO','CON F11 TIPO CLIENTE ASOCIADO','SE ASOCIA F3-DEVUELTO A PROVEEDOR',
+'CON RO ASOCIADO','COMPENSA CON LOCAL DE VENTA/ANULADO X USER', 'F12 EN DIGITADO SIN SALIDA']
 print('Análisis F5s')
 for tipmc in tqdm(lista_tipmc_f5): 
-    cierre_f5(cerrado, tipmc) """
+    #cierre_f5(cerrado, tipmc)
+    ica.f5_verify(f5, tipmc, '2021', 'cod_aut_nc')
 
 lista_tipm_f4 = ['SE ASOCIA F4-BAJA DE INVENTARIO-MENAJE', 'BAJA CON CARGO A LINEA POR COSTOS']
 print('Análisis F4s')
 for tipmc2 in tqdm(lista_tipm_f4):
-    cierre_f4(cerrado, tipmc2)
+    #cierre_f4(cerrado, tipmc2)
+    ica.f4_verify(f4, tipmc2, '2021')
 
+ica.f5_verify_local(f5, 'COMPENSACIÓN CON DVD ADMINISTRATIVO', '2021', 'cod_aut_nc', '3001')
+ica.f5_verify_local_list(f5, 'COMPENSACIÓN CON CT CIUDADES', '2021', 'cod_aut_nc', cts)
+ica.f5_verify_local_list(f5,'COMPENSACIÓN CON PREVENTAS', '2021', 'cod_aut_nc', preventas)
+ica.f5_verify_local_list(f5,'COMPENSACIÓN CON TIENDA', '2021', 'cod_aut_nc', tiendas)
+#ica.get_duplicates(nc, ['cod_aut_nc', 'local_trx','upc', 'cantidad_trx_actual'], 'Cod Aut + Local + UPC + Qty')
 
 nc = ica.get_db()
 print(cerrado[[status_column, cost_column]].groupby(status_column).sum().sort_values(by=cost_column, ascending=False))
 
 res = nc.groupby([status_column,'GCO']).agg({cost_column:['sum', 'count']}).sort_values([status_column,('ct','sum')],ascending=False)
 print(res)
-
+#print(res[('ct', 'sum')].sum())
 #nc.to_csv(f'output/{dt_string}-nc-output.csv', sep=';', index=False)
