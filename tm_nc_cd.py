@@ -13,7 +13,7 @@ pd.set_option('display.max_columns', 70)
 
 dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
 
-cts = ['9913','9917','9919','9920','9918','9912','9914']
+cts = ['9913','9917','9919','9920','9918','9912','9914', '9902']
 preventas = ['9904','9905','9908','9909','9915','9916']
 tiendas = ['139','141','142','143','5','37','35','43','53','36','38','98','138',
 '45','72','183','25','123','19','50','85','101','321','323','324','108','6','18','82',
@@ -33,7 +33,7 @@ f11_col= 'f11'
 f5 = pd.read_csv(f'input/nc_3000/210617/210610-162143-f5-output.csv', sep=';', dtype='object')
 f4 = pd.read_csv(f'input/nc_3000/210617/210616-100307-f4-output.csv', sep=';', dtype='object')
 kpi = pd.read_csv(f'input/nc_3000/210617/210616-101000-kpi.csv', sep=';', dtype='object')
-nc = pd.read_csv(f'input/nc_3000/210617/210617_nc.csv', sep=';', dtype='object')
+nc = pd.read_csv(f'input/nc_3000/210617/210618_nc.csv', sep=';', dtype='object')
 f3 = pd.read_csv(f'input/nc_3000/210617/210616-082924-f3.csv', sep=';', dtype='object')
 refact = pd.read_csv(f'input/nc_3000/210617/210616-refact.csv', sep=';', dtype='object')
 
@@ -45,10 +45,12 @@ kpi = ct.normalizar_cols(kpi)
 nc = ct.normalizar_cols(nc)
 refact = ct.normalizar_cols(refact)
 
-f5 = ct.convertir_a_numero(f5, ['cant. recibida'])
+f5 = ct.convertir_a_numero(f5, ['cant. recibida', 'cant. pickeada'])
 f4 = ct.convertir_a_numero(f4, ['cantidad'])
 nc = ct.convertir_a_numero(nc, [cost_column,'cantidad_trx_actual'])
 
+nc = ct.limpiar_cols(nc, [status_column, 'esmc'])
+#nc[status_column] = nc[status_column].apply(unidecode)
 #TODO cambiar fechas de texto a date 
 colsf5 = ['fe. reserva', 'fe. envo', 'fe. recep']
 newcolsf5 = ['aaaa reserva', 'aaaa envio', 'aaaa recep']
@@ -81,10 +83,10 @@ f3.drop([ 'nro guia', 'tipo producto', 'marca', 'subclase', 'descripcion.1', 'cl
 
 nc.reset_index(inplace=True)
 nc.rename(columns={'index': index_name}, inplace=True)
-cerrado = nc[nc['esmc']=='CERRADO']
+cerrado = nc[nc['esmc']=='cerrado']
+cerrado[status_column] = cerrado[status_column].apply(unidecode)
 
 ica = InternalControlAnalysis(nc, index_name, cost_column, status_column, qty_column, upc_column)
-ica.set_fcols([])
 ica.set_fcols([f3_col, f4_col, f5_col, f11_col,'','cod_aut_nc'])
 #TODO fix f12 number in f4_verify
 
@@ -120,30 +122,46 @@ def cierre_f4(bd, status):
     ica.update_db(iokf5, 'GCO','OKK')
     ica.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY') 
 
-lista_tipmc_f5 = ['CON MC ASOCIADA','COMPENSACIÓN CON CT VERDE','SE ASOCIA F11-CONCILIACION CON TRANSPORTADORA',
-'CON QUIEBRE ASOCIADO','CON F11 TIPO CLIENTE ASOCIADO','SE ASOCIA F3-DEVUELTO A PROVEEDOR',
-'CON RO ASOCIADO','COMPENSA CON LOCAL DE VENTA/ANULADO X USER', 'F12 EN DIGITADO SIN SALIDA']
+lista_tipmc_f5 = ['con mc asociada','compensacion con ct verde','se asocia f11-conciliacion con transportadora',
+'con quiebre asociado','con f11 tipo cliente asociado','se asocia f3-devuelto a proveedor',
+'con ro asociado','compensa con local de venta/anulado x user', 'f12 en digitado sin salida']
+
+# 'devolucion no efectiva/nueva facturacion',
+# 'compensa con el mismo local',
+# 'baja con cargo a dependencia por politicas/definiciones',
+# 'local venta 3000/no aplica carga', 'sku garantia/armado',
+# 'error en generacion de nota credito']
+
 print('Análisis F5s')
-for tipmc in tqdm(lista_tipmc_f5): 
+for tipo in tqdm(lista_tipmc_f5): 
     #cierre_f5(cerrado, tipmc)
-    ica.f5_verify(f5, tipmc, '2021', 'cod_aut_nc')
+    ica.f5_verify(f5, tipo, '2021', 'cod_aut_nc')
 
-lista_tipm_f4 = ['SE ASOCIA F4-BAJA DE INVENTARIO-MENAJE', 'BAJA CON CARGO A LINEA POR COSTOS']
+lista_tipm_f4 = ['se asocia f4-baja de inventario-menaje', 'baja con cargo a linea por costos']
 print('Análisis F4s')
-for tipmc2 in tqdm(lista_tipm_f4):
+for tipo2 in tqdm(lista_tipm_f4):
     #cierre_f4(cerrado, tipmc2)
-    ica.f4_verify(f4, tipmc2, '2021')
+    ica.f4_verify(f4, tipo2, '2021')
 
-ica.f5_verify_local(f5, 'COMPENSACIÓN CON DVD ADMINISTRATIVO', '2021', 'cod_aut_nc', '3001')
-ica.f5_verify_local_list(f5, 'COMPENSACIÓN CON CT CIUDADES', '2021', 'cod_aut_nc', cts)
-ica.f5_verify_local_list(f5,'COMPENSACIÓN CON PREVENTAS', '2021', 'cod_aut_nc', preventas)
-ica.f5_verify_local_list(f5,'COMPENSACIÓN CON TIENDA', '2021', 'cod_aut_nc', tiendas)
+ica.f5_verify_local(f5, 'compensacion con dvd administrativo', '2021', 'cod_aut_nc', '3001')
+print('cts ------------------------------------------------------------')
+nil = ica.f5_verify_local_list(f5, 'compensacion con ct ciudades', '2021', 'cod_aut_nc', 'CTs',cts)
+print(nil)
+print('preventas ------------------------------------------------------------')
+nil = ica.f5_verify_local_list(f5,'compensacion con preventas', '2021', 'cod_aut_nc', 'preventas',preventas)
+print(nil)
+print('tiendas ------------------------------------------------------------')
+nil = ica.f5_verify_local_list(f5,'compensacion con tienda', '2021', 'cod_aut_nc', 'tiendas ',tiendas)
+print(nil)
 #ica.get_duplicates(nc, ['cod_aut_nc', 'local_trx','upc', 'cantidad_trx_actual'], 'Cod Aut + Local + UPC + Qty')
 
 nc = ica.get_db()
+nc.loc[nc['GCO'].notna(), 'checked'] = 'y'
+nc.loc[nc['GCO'].isna(), 'checked'] = 'n'
+
 print(cerrado[[status_column, cost_column]].groupby(status_column).sum().sort_values(by=cost_column, ascending=False))
 
 res = nc.groupby([status_column,'GCO']).agg({cost_column:['sum', 'count']}).sort_values([status_column,('ct','sum')],ascending=False)
 print(res)
-#print(res[('ct', 'sum')].sum())
-#nc.to_csv(f'output/{dt_string}-nc-output.csv', sep=';', index=False)
+print(res[('ct', 'sum')].sum())
+nc.to_csv(f'output/{dt_string}-nc-output.csv', sep=';', index=False)

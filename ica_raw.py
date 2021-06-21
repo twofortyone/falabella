@@ -4,19 +4,14 @@ import numpy as np
 
 class InternalControlAnalysis:
 
-    def __init__(self, db, indexcol, costcol, statuscol, qtycol, upccol) -> None:
+    def __init__(self, db, indexcol) -> None:
         """ 
         Get rows with different quantity 
         :param bd: dataframe base
         """
         self.db = db.copy()
         self.index_column = indexcol
-        self.cost_column = costcol 
-        self.status_column = statuscol
-        self.qty_column = qtycol
-        self.upc_column = upccol
         self.dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
-        self.fcols = ['f3col-0', 'f4col-1', 'f5col-2', 'f11col-3', 'f12col-4']
     
     def set_fcols(self, cols):
         self.fcols = cols
@@ -189,57 +184,3 @@ class InternalControlAnalysis:
         self.db.loc[imvalue, 'Comentario GCO'] = comment
         bdquery_res = bdquery[bdquery[valuecol]<=value]
         return bdquery_res
-
-    def f4_verify(self, f4, status, yyyy):
-        df1 = self.db[self.db[self.status_column]==status]
-        df2 = self.get_fnan( df1, self.fcols[1], 'F4')
-        if df2.empty == False:
-            df3 = self.get_duplicates( df2, [self.fcols[4], self.upc_column, self.qty_column], 'F12 + UPC + Cantidad')
-            ne = self.get_notfound( df3, f4, [self.fcols[1], self.upc_column], ['nro. red. inventario','upc'], 'nro. red. inventario', 'F4|UPC|QTY')
-            df4 = pd.merge(df3, f4, left_on=[self.fcols[1], self.upc_column], right_on=['nro. red. inventario','upc'])
-            if df4.empty ==False: 
-                df5 = self.get_equalvalue(df4, 'estado', 'Anulado', 'ANU', 'Registro anulado')
-                df6 = self.get_diffvalue(df5, 'aa creacion', yyyy, 'NAA', f'Registro con año de creación diferente a {yyyy}')
-                df7 = self.get_diffqty_pro(df6, self.qty_column, 'cantidad',self.fcols[3],'nro. red. inventario', 'La cantidad sumada de los F11s de un F4 es mayor que la cantidad del F4')
-                iokf4 = df7[self.index_column].values
-                self.update_db(iokf4,'GCO', 'OKK')
-                self.update_db(iokf4,'Comentario GCO', 'Coincidencia exacta F4+UPC+QTY')
-
-    def f5_verify(self, f5, status, yyyy, dqpcol):
-        df1 = self.db[self.db[self.status_column]==status]
-        df2 = self.get_fnan( df1, self.fcols[2], 'F5')
-        if df2.empty ==False: 
-            df3 = self.get_duplicates( df2, [self.fcols[4], self.upc_column, self.qty_column ], 'F12 + UPC + Cantidad')
-            ne = self.get_notfound( df3, f5, [self.fcols[2], self.upc_column], ['transfer','upc'], 'transfer', 'F5|UPC|Qty')
-            df4 = pd.merge(df3, f5, left_on=[self.fcols[2], self.upc_column], right_on=['transfer','upc'])
-            if df4.empty ==False: 
-                df5 = self.get_diffvalue(df4, 'estado', 'Recibido', 'NRE', 'Registro con estado diferente a recibido')
-                df6 = self.get_equalvalue(df5, 'motivo discrepancia', 'F5 NO RECIBIDO', 'MDI', 'Registro con motivo de disc: F5 no recibido')
-                df7 = self.get_diffvalue(df6, 'aaaa reserva', yyyy, 'NAA', f'Registro con año de reserva diferente a {yyyy}')
-                comment = f'La cantidad sumada de los {dqpcol} de un F5 es mayor que la cantidad del F5'
-                df8 = self.get_diffqty_pro(df7,  self.qty_column, 'cant. recibida', dqpcol, 'transfer', comment)
-                iokf5 = df8[self.index_column].values
-                self.update_db(iokf5, 'GCO','OKK')
-                self.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY')
-
-    def f3_verify(self, f3, status, yyyy):
-        df1 = self.db[self.db[self.status_column]==status]
-        df2= self.get_fnan( df1, self.fcols[0], 'F3')
-        if df2.empty == False: 
-            df3 = self.get_duplicates( df2,[self.fcols[4],self.upc_column, self.qty_column], 'F12 + UPC + Cantidad')
-            ne = self.get_notfound( df3, f3, [self.fcols[0],self.upc_column], ['nro devolucion','upc'], 'nro devolucion', 'F3|UPC|QTY')
-            df4 = pd.merge(df3, f3, left_on=[self.fcols[0],self.upc_column], right_on=['nro devolucion','upc'])
-            if df4.empty ==False: 
-                df5 = self.get_equalvalue(df4, 'descripcion.6', 'Anulado', 'ANU', 'Registro anulado')
-                df6 = self.get_diffqty_pro(df5, self.qty_column, 'cantidad',self.fcols[3], 'nro devolucion' ,'La cantidad sumada de los f11s de un f3 es mayor que la cantidad del f3')
-                iokf3 = df6[self.index_column].values
-                self.update_db(iokf3,'GCO', 'OKK')
-                self.update_db(iokf3,'Comentario GCO', 'Coincidencia exacta F3+UPC+QTY')
-                df7 = df6[df6['descripcion.6']=='Confirmado']
-                df8= self.get_diffvalue(df7, 'aaaa anulacion', yyyy, 'NAA', f'Registro con año de confirmación diferente a {yyyy}')
-
-
-"""     def get_inlist(self, bquery, valuecol, value, list, note, comment):
-        inlist 
-        self.db.loc[iequalvalue, 'GCO'] = note
-        self.db.loc[iequalvalue, 'Comentario GCO'] = comment """

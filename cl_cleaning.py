@@ -37,4 +37,5 @@ class CleaningText:
     def limpiar_cols(bd, cols):
         bd.loc[:,cols].fillna('N/A', inplace=True)
         bd.loc[:,cols] = bd.loc[:,cols].apply(lambda x: x.str.strip('.!?$ \n\t').str.lower() if x is not None else x)
+        bd.loc[:,cols].fillna('N/A', inplace=True)
         return bd

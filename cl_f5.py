@@ -3,7 +3,7 @@ from datetime import datetime
 import numpy as np
 
 # Verificar para cada archivo 
-num_f5_files = 6
+num_f5_files = 8
 f5_input_name = 'f5' # Prefijo del nombre del archivo 
 #--------------------------------------------------------------
 f5 = None 

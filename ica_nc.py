@@ -104,6 +104,22 @@ class InternalControlAnalysis:
         bdquery_res = bdquery[bdquery[qty1col]==bdquery[qty2col]]
         return bdquery_res
     
+    def get_diffqty_pro_f5(self, bdquery, qty1col, qty2col, fl, ff, comment):
+        """ 
+        Get rows with different quantity
+        :param bdquery: dataframe to identify different quantity
+        :param qty1col: (string) quantity 1 
+        :param qty2col: (string) quantity 2 
+        """
+        s = bdquery[[fl, ff,qty1col, qty2col, 'cant. pickeada']].groupby([fl, ff]).sum().reset_index()
+        fs = list(s[(s[qty1col]!= s[qty2col]) & (s[qty1col]!= s['cant. pickeada'])][fl].values)
+        dc = bdquery[bdquery[fl].isin(fs)] # Registros con cantidades diferentes
+        idc = dc[self.index_column].values
+        self.db.loc[idc, 'GCO' ] = 'NCC'
+        self.db.loc[idc, 'Comentario GCO' ] = comment
+        bdquery_res = bdquery[~bdquery[fl].isin(fs)]
+        return bdquery_res
+
     def get_diffqty_pro(self, bdquery, qty1col, qty2col, fl, ff, comment):
         """ 
         Get rows with different quantity
@@ -112,14 +128,13 @@ class InternalControlAnalysis:
         :param qty2col: (string) quantity 2 
         """
         s = bdquery[[fl, ff,qty1col, qty2col]].groupby([fl, ff]).sum().reset_index()
-        fs = list(s[s[qty1col]>s[qty2col]][fl].values)
+        fs = list(s[s[qty1col]== s[qty2col]][fl].values)
         dc = bdquery[bdquery[fl].isin(fs)] # Registros con cantidades diferentes
         idc = dc[self.index_column].values
         self.db.loc[idc, 'GCO' ] = 'NCC'
         self.db.loc[idc, 'Comentario GCO' ] = comment
         bdquery_res = bdquery[~bdquery[fl].isin(fs)]
         return bdquery_res
-
 
     def get_canceledstatus(self, bdquery, statuscol):
         """ 
@@ -176,13 +191,13 @@ class InternalControlAnalysis:
         bdquery_res = bdquery[bdquery[valuecol]!=value]
         return bdquery_res
     
-    def get_notinlist(self, bdquery, valuecol, list, note, comment):
-        notinlist = bdquery[~bdquery[valuecol].isin(list)]
-        inotinlist = notinlist[self.index_column].values
+    def get_notinlist(self, bdquery, valuecol, lista, note, comment):
+        notinlist3 = bdquery[~bdquery[valuecol].isin(lista)]
+        inotinlist = notinlist3[self.index_column].values
         self.db.loc[inotinlist, 'GCO'] = note
         self.db.loc[inotinlist, 'Comentario GCO'] = comment
-        bdquery_res = bdquery[bdquery[valuecol].isin(list)]
-        return bdquery_res
+        bdquery_res = bdquery[bdquery[valuecol].isin(lista)]
+        return bdquery_res, list(notinlist3['local recep'])
 
     def get_menorvalue(self, bdquery, valuecol, value, note, comment):
         """ 
@@ -199,7 +214,7 @@ class InternalControlAnalysis:
         return bdquery_res
 
     def f4_verify(self, f4, status, yyyy):
-        df1 = self.db[(self.db[self.status_column]==status) & (self.db['esmc']=='CERRADO')]
+        df1 = self.db[(self.db[self.status_column]==status) & (self.db['esmc']=='cerrado')]
         df2 = self.get_fnan( df1, self.fcols[1], 'F4')
         if df2.empty == False:
             df3 = self.get_duplicates( df2, ['cod_aut_nc', 'local_trx','upc', 'cantidad_trx_actual'], 'Cod Aut + Local + UPC + Qty')
@@ -209,13 +224,14 @@ class InternalControlAnalysis:
                 df5 = self.get_equalvalue(df4, 'estado_y', 'Anulado', 'ANU', 'Registro anulado')
                 df6 = self.get_diffvalue(df5, 'aa creacion', yyyy, 'NAA', f'Registro con año de creación diferente a {yyyy}')
                 comment = 'La cantidad sumada de los cod. aut. nc de un F4 es mayor que la cantidad del F4'
-                df7 = self.get_diffqty_pro(df6, self.qty_column, 'cantidad',self.fcols[5],'nro. red. inventario', comment)
-                iokf4 = df7[self.index_column].values
-                self.update_db(iokf4,'GCO', 'OKK')
-                self.update_db(iokf4,'Comentario GCO', 'Coincidencia exacta F4+UPC+QTY')
+                if df6.empty == False:
+                    df7 = self.get_diffqty_pro(df6, self.qty_column, 'cantidad',self.fcols[5],'nro. red. inventario', comment)
+                    iokf4 = df7[self.index_column].values
+                    self.update_db(iokf4,'GCO', 'OKK')
+                    self.update_db(iokf4,'Comentario GCO', 'Coincidencia exacta F4+UPC+QTY')
 
     def f5_verify(self, f5, status, yyyy, dqpcol):
-        df1 = self.db[(self.db[self.status_column]==status) & (self.db['esmc']=='CERRADO')]
+        df1 = self.db[(self.db[self.status_column]==status) & (self.db['esmc']=='cerrado')]
         df2 = self.get_fnan( df1, self.fcols[2], 'F5')
         if df2.empty ==False: 
             df3 = self.get_duplicates( df2, ['cod_aut_nc', 'local_trx','upc', 'cantidad_trx_actual'], 'Cod Aut + Local + UPC + Qty')
@@ -225,14 +241,15 @@ class InternalControlAnalysis:
                 df5 = self.get_diffvalue(df4, 'estado_y', 'Recibido', 'NRE', 'Registro con estado diferente a recibido')
                 df6 = self.get_equalvalue(df5, 'motivo discrepancia', 'F5 NO RECIBIDO', 'MDI', 'Registro con motivo de disc: F5 no recibido')
                 df7 = self.get_diffvalue(df6, 'aaaa reserva', yyyy, 'NAA', f'Registro con año de reserva diferente a {yyyy}')
-                comment = f'La cantidad sumada de los {dqpcol} de un F5 es mayor que la cantidad del F5'
-                df8 = self.get_diffqty_pro(df7,  self.qty_column, 'cant. recibida', dqpcol, 'transfer', comment)
-                iokf5 = df8[self.index_column].values
-                self.update_db(iokf5, 'GCO','OKK')
-                self.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY')
+                comment = f'La qty sumada de los {dqpcol}, la cantidad pickeada o la cantidad recibida son diferentes'
+                if df7.empty == False: 
+                    df8 = self.get_diffqty_pro_f5(df7,  self.qty_column, 'cant. recibida', dqpcol, 'transfer', comment)
+                    iokf5 = df8[self.index_column].values
+                    self.update_db(iokf5, 'GCO','OKK')
+                    self.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY')
 
     def f5_verify_local(self, f5, status, yyyy, dqpcol, local):
-        df1 = self.db[(self.db[self.status_column]==status) & (self.db['esmc']=='CERRADO')]
+        df1 = self.db[(self.db[self.status_column]==status) & (self.db['esmc']=='cerrado')]
         df2 = self.get_fnan( df1, self.fcols[2], 'F5')
         if df2.empty ==False: 
             df3 = self.get_duplicates( df2, ['cod_aut_nc', 'local_trx','upc', 'cantidad_trx_actual'], 'Cod Aut + Local + UPC + Qty')
@@ -242,15 +259,17 @@ class InternalControlAnalysis:
                 df5 = self.get_diffvalue(df4, 'estado_y', 'Recibido', 'NRE', 'Registro con estado diferente a recibido')
                 df6 = self.get_equalvalue(df5, 'motivo discrepancia', 'F5 NO RECIBIDO', 'MDI', 'Registro con motivo de disc: F5 no recibido')
                 df7 = self.get_diffvalue(df6, 'aaaa reserva', yyyy, 'NAA', f'Registro con año de reserva diferente a {yyyy}')
-                comment = f'La cantidad sumada de los {dqpcol} de un F5 es mayor que la cantidad del F5'
-                df8 = self.get_diffqty_pro(df7,  self.qty_column, 'cant. recibida', dqpcol, 'transfer', comment)
-                df9 = self.get_diffvalue(df8, 'local recep', local, 'NCL', f'Registro con local diferente a {local}')
-                iokf5 = df9[self.index_column].values
-                self.update_db(iokf5, 'GCO','OKK')
-                self.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY')
+                comment = f'La qty sumada de los {dqpcol}, la cantidad pickeada o la cantidad recibida son diferentes'
+                if df7.empty == False: 
+                    df8 = self.get_diffqty_pro_f5(df7,  self.qty_column, 'cant. recibida', dqpcol, 'transfer', comment)
+                    df9 = self.get_diffvalue(df8, 'local recep', local, 'NCL', f'Registro con local diferente a {local}')
+                    iokf5 = df9[self.index_column].values
+                    self.update_db(iokf5, 'GCO','OKK')
+                    self.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY')
     
-    def f5_verify_local_list(self, f5, status, yyyy, dqpcol, locales):
-        df1 = self.db[(self.db[self.status_column]==status) & (self.db['esmc']=='CERRADO')]
+    def f5_verify_local_list(self, f5, status, yyyy, dqpcol, local , locales):
+        nil = []
+        df1 = self.db[(self.db[self.status_column]==status) & (self.db['esmc']=='cerrado')]
         df2 = self.get_fnan( df1, self.fcols[2], 'F5')
         if df2.empty ==False: 
             df3 = self.get_duplicates( df2, ['cod_aut_nc', 'local_trx','upc', 'cantidad_trx_actual'], 'Cod Aut + Local + UPC + Qty')
@@ -260,15 +279,21 @@ class InternalControlAnalysis:
                 df5 = self.get_diffvalue(df4, 'estado_y', 'Recibido', 'NRE', 'Registro con estado diferente a recibido')
                 df6 = self.get_equalvalue(df5, 'motivo discrepancia', 'F5 NO RECIBIDO', 'MDI', 'Registro con motivo de disc: F5 no recibido')
                 df7 = self.get_diffvalue(df6, 'aaaa reserva', yyyy, 'NAA', f'Registro con año de reserva diferente a {yyyy}')
-                comment = f'La cantidad sumada de los {dqpcol} de un F5 es mayor que la cantidad del F5'
-                df8 = self.get_diffqty_pro(df7,  self.qty_column, 'cant. recibida', dqpcol, 'transfer', comment)
-                df9 = self.get_notinlist(df8, 'local recep', locales, 'NCL', f'Registro con local diferente a {locales}')
-                iokf5 = df9[self.index_column].values
-                self.update_db(iokf5, 'GCO','OKK')
-                self.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY')
+                comment = f'La qty sumada de los {dqpcol}, la cantidad pickeada o la cantidad recibida son diferentes'
+                df8, lista = self.get_notinlist(df7, 'local recep', locales, 'NCL', f'Registro con local diferente a {local}')
+                if df8.empty == False: 
+                    df9 = self.get_diffqty_pro_f5(df7,  self.qty_column, 'cant. recibida', dqpcol, 'transfer', comment)
+                    iokf5 = df9[self.index_column].values
+                    self.update_db(iokf5, 'GCO','OKK')
+                    self.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY')
+                return lista 
+            else:
+                return nil 
+        else: 
+            return nil 
 
     def f3_verify(self, f3, status, yyyy, dqpcol):
-        df1 = self.db[(self.db[self.status_column]==status) & (self.db['esmc']=='CERRADO')]
+        df1 = self.db[(self.db[self.status_column]==status) & (self.db['esmc']=='cerrado')]
         df2= self.get_fnan( df1, self.fcols[0], 'F3')
         if df2.empty == False: 
             df3 = self.get_duplicates( df2,['cod_aut_nc', 'local_trx','upc', 'cantidad_trx_actual'], 'Cod Aut + Local + UPC + Qty')
@@ -277,9 +302,10 @@ class InternalControlAnalysis:
             if df4.empty ==False: 
                 df5 = self.get_equalvalue(df4, 'descripcion.6', 'Anulado', 'ANU', 'Registro anulado')
                 comment = f'La cantidad sumada de los {dqpcol} de un f3 es mayor que la cantidad del f3'
-                df6 = self.get_diffqty_pro(df5, self.qty_column, 'cantidad',dqpcol, 'nro devolucion' ,comment)
-                iokf3 = df6[self.index_column].values
-                self.update_db(iokf3,'GCO', 'OKK')
-                self.update_db(iokf3,'Comentario GCO', 'Coincidencia exacta F3+UPC+QTY')
-                df7 = df6[df6['descripcion.6']=='Confirmado']
-                df8= self.get_diffvalue(df7, 'aaaa anulacion', yyyy, 'NAA', f'Registro con año de confirmación diferente a {yyyy}')
+                if df5.empty == False:
+                    df6 = self.get_diffqty_pro(df5, self.qty_column, 'cantidad',dqpcol, 'nro devolucion' ,comment)
+                    iokf3 = df6[self.index_column].values
+                    self.update_db(iokf3,'GCO', 'OKK')
+                    self.update_db(iokf3,'Comentario GCO', 'Coincidencia exacta F3+UPC+QTY')
+                    df7 = df6[df6['descripcion.6']=='Confirmado']
+                    df8= self.get_diffvalue(df7, 'aaaa anulacion', yyyy, 'NAA', f'Registro con año de confirmación diferente a {yyyy}')
