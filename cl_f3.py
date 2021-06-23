@@ -3,7 +3,7 @@ from datetime import datetime
 
 # Verificar para cada archivo 
 num_f4_files = 1
-f3_input_name = '210616_f3_0' # Prefijo del nombre del archivo 
+f3_input_name = '210623_f3_0' # Prefijo del nombre del archivo 
 #--------------------------------------------------------------
 dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
 

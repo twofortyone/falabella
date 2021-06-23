@@ -23,12 +23,12 @@ class CierresF11:
         df2 = self.ica.get_fnan( df1, self.fcols[1], 'F4')
         if df2.empty == False:
             df3 = self.ica.get_duplicates( df2, [self.fcols[4], self.pcols[1], self.pcols[3]], 'F12 + UPC + Cantidad')
-            ne = self.ica.get_notfound( df3, f4, [self.fcols[1], self.pcols[1]], ['nro. red. inventario','upc'], 'nro. red. inventario', 'F4|UPC|QTY')
-            df4 = pd.merge(df3, f4, left_on=[self.fcols[1], self.pcols[1]], right_on=['nro. red. inventario','upc'])
+            ne = self.ica.get_notfound( df3, f4, [self.fcols[1], self.pcols[1]], ['nro_red_inventario','upc'], 'nro_red_inventario', 'F4|UPC|QTY')
+            df4 = pd.merge(df3, f4, left_on=[self.fcols[1], self.pcols[1]], right_on=['nro_red_inventario','upc'])
             if df4.empty ==False: 
                 df5 = self.ica.get_equalvalue(df4, 'estado', 'Anulado', 'ANU', 'Registro anulado')
                 df6 = self.ica.get_diffvalue(df5, 'aa creacion', yyyy, 'NAA', f'Registro con año de creación diferente a {yyyy}')
-                df7 = self.ica.get_diffqty_pro(df6, self.pcols[3], 'cantidad',self.fcols[3],'nro. red. inventario', 'La cantidad sumada de los F11s de un F4 es mayor que la cantidad del F4')
+                df7 = self.ica.get_diffqty_pro(df6, self.pcols[3], 'cantidad',self.fcols[3],'nro_red_inventario', 'La cantidad sumada de los F11s de un F4 es mayor que la cantidad del F4')
                 iokf4 = df7[self.index_column].values
                 self.ica.update_db(iokf4,'GCO', 'OKK')
                 self.ica.update_db(iokf4,'Comentario GCO', 'Coincidencia exacta F4+UPC+QTY')
@@ -45,7 +45,7 @@ class CierresF11:
                 df6 = self.ica.get_equalvalue(df5, 'motivo discrepancia', 'F5 NO RECIBIDO', 'MDI', 'Registro con motivo de disc: F5 no recibido')
                 df7 = self.ica.get_diffvalue(df6, 'aaaa reserva', yyyy, 'NAA', f'Registro con año de reserva diferente a {yyyy}')
                 comment = f'La cantidad sumada de los F11s de un F5 es mayor que la cantidad del F5'
-                df8 = self.ica.get_diffqty_pro(df7,  self.pcols[3], 'cant. recibida', self.fcols[3], 'transfer', comment)
+                df8 = self.ica.get_diffqty_pro(df7,  self.pcols[3], 'can_recibida', self.fcols[3], 'transfer', comment)
                 iokf5 = df8[self.index_column].values
                 self.ica.update_db(iokf5, 'GCO','OKK')
                 self.ica.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY')
@@ -55,15 +55,15 @@ class CierresF11:
         df2= self.ica.get_fnan( df1, self.fcols[0], 'F3')
         if df2.empty == False: 
             df3 = self.ica.get_duplicates( df2,[self.fcols[4],self.pcols[1], self.pcols[3]], 'F12 + UPC + Cantidad')
-            ne = self.ica.get_notfound( df3, f3, [self.fcols[0],self.pcols[1]], ['nro devolucion','upc'], 'nro devolucion', 'F3|UPC|QTY')
-            df4 = pd.merge(df3, f3, left_on=[self.fcols[0],self.pcols[1]], right_on=['nro devolucion','upc'])
+            ne = self.ica.get_notfound( df3, f3, [self.fcols[0],self.pcols[1]], ['nro_devolucion','upc'], 'nro_devolucion', 'F3|UPC|QTY')
+            df4 = pd.merge(df3, f3, left_on=[self.fcols[0],self.pcols[1]], right_on=['nro_devolucion','upc'])
             if df4.empty ==False: 
-                df5 = self.ica.get_equalvalue(df4, 'descripcion.6', 'Anulado', 'ANU', 'Registro anulado')
-                df6 = self.ica.get_diffqty_pro(df5, self.pcols[3], 'cantidad',self.fcols[3], 'nro devolucion' ,'La cantidad sumada de los f11s de un f3 es mayor que la cantidad del f3')
+                df5 = self.ica.get_equalvalue(df4, 'descripcion6', 'Anulado', 'ANU', 'Registro anulado')
+                df6 = self.ica.get_diffqty_pro(df5, self.pcols[3], 'cantidad',self.fcols[3], 'nro_devolucion' ,'La cantidad sumada de los f11s de un f3 es mayor que la cantidad del f3')
                 iokf3 = df6[self.index_column].values
                 self.ica.update_db(iokf3,'GCO', 'OKK')
                 self.ica.update_db(iokf3,'Comentario GCO', 'Coincidencia exacta F3+UPC+QTY')
-                df7 = df6[df6['descripcion.6']=='Confirmado']
+                df7 = df6[df6['descripcion6']=='Confirmado']
                 df8= self.ica.get_diffvalue(df7, 'aaaa anulacion', yyyy, 'NAA', f'Registro con año de confirmación diferente a {yyyy}')
 
     def kpi_verify(self, kpi, status, yyyy, commenty):
@@ -80,7 +80,7 @@ class CierresF11:
         pgdim = pd.concat(lpgdi, axis=0)
         pgdimdyear = '' 
         if yyyy == '2021': 
-            pgdimdyear = self.ica.get_diffvalue(pgdim, 'aaaa paletiza', yyyy, 'NAA',commenty)
+            pgdimdyear = self.ica.get_diffvalue(pgdim, 'aaaa_paletiza', yyyy, 'NAA',commenty)
         else:
             pgdimdyear = self.ica.get_menorvalue(pgdim, 'fecha_paletiza', '2021-01-20', 'NAA', commenty)
         iokkpid = pgdimdyear[self.index_column].values
@@ -93,7 +93,7 @@ class CierresF11:
         df3 = self.ica.get_duplicates( df2,[self.fcols[4],'prd_upc', 'qproducto'], 'F12 + UPC + Cantidad')
         ne = self.ica.get_notfound( df3, refact, [self.fcols[4]], ['f12cod'], 'f12cod', 'F12')
         df4 = pd.merge(df3, refact, left_on=[self.fcols[4]], right_on=['f12cod'])
-        df5 = self.ica.get_equalvalue(df4, 'confirmacion tesoreria', 'NO REINTEGRADO - TRX DECLINADA', 'ANU', 'Registro con TRX declinada')
+        df5 = self.ica.get_equalvalue(df4, 'confirmacion_tesoreria', 'NO REINTEGRADO - TRX DECLINADA', 'ANU', 'Registro con TRX declinada')
         #df5 = cierres.ica.get_diffvalue(df4, 'estado', 'APPROVED', 'ANU', 'Registro con transacción anulada')
         # df6 = cierres.ica.get_diffqty_pro(df5, 'qproducto', 'cantidad',f11_col, f3_col,'La cantidad sumada de los f11s de un f3 es mayor que la cantidad del f3')
         iokf12 = df5[self.index_column].values

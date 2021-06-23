@@ -8,9 +8,10 @@ class CleaningText:
     def __init__(self) -> None:
         pass
 
-    def normalizar_cols(bd):
+    def norm_header(bd):
         bd.rename(columns=lambda col: unidecode(col), inplace=True)
         bd.rename(columns=lambda col: col.strip('.!? \n\t').lower(), inplace=True)
+        bd.rename(columns=lambda col: col.replace('.', '').replace(' ', '_'), inplace = True)
         return bd
 
 

@@ -8,8 +8,8 @@ from cl_cleaning import CleaningText as ct
 now = datetime.now()
 dt_string = now.strftime("%y%m%d-%H%M%S")
 
-kpi = pd.read_excel('input/210616_kpi.xlsx', dtype='object')
-kpi = ct.normalizar_cols(kpi)
+kpi = pd.read_excel('input/210623_kpi.xlsx', dtype='object')
+kpi = ct.norm_header(kpi)
 kpi.rename(columns={'index': 'ind'}, inplace=True)
 
 kpi.reset_index(inplace=True)
