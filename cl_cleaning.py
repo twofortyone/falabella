@@ -30,13 +30,13 @@ class CleaningText:
     def convertir_a_numero(bd, cols):
         bd.loc[:,cols].fillna('N/A', inplace=True)
         bd.loc[:,cols] = bd.loc[:,cols].apply(lambda x: x.str.strip('.!?$ \n\t').str.replace(
-            '.', '', regex=False).str.replace(',', '.', regex=False) if x is not None else x)
+            '.', '', regex=False).str.replace(',', '.', regex=False) )
         bd.loc[:,cols] = bd.loc[:,cols].apply(pd.to_numeric, errors='coerce', downcast='float')
         bd.loc[:,cols].fillna(0)
         return bd
         
     def limpiar_cols(bd, cols):
         bd.loc[:,cols].fillna('N/A', inplace=True)
-        bd.loc[:,cols] = bd.loc[:,cols].apply(lambda x: x.str.strip('.!?$ \n\t').str.lower() if x is not None else x)
+        bd.loc[:,cols] = bd.loc[:,cols].apply(lambda x: x.str.strip('.!?$ \n\t').str.lower())
         bd.loc[:,cols].fillna('N/A', inplace=True)
         return bd

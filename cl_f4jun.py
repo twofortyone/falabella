@@ -4,7 +4,7 @@ import numpy as np
 
 # Verificar para cada archivo 
 num_f4_files = 2
-f4_input_name = '210623_f4' # Prefijo del nombre del archivo 
+f4_input_name = '210625_f4' # Prefijo del nombre del archivo 
 #--------------------------------------------------------------
 f4 = None 
 list_f4 = []
@@ -61,7 +61,7 @@ f4['Nro. Red. Inventario'].fillna('N/A', inplace=True)
 f4 = f4[(f4['Nro. Red. Inventario'].str.isdigit()) & (~f4['Nro. Red. Inventario'].str.startswith('1'))]
 
 # Extraer el F11
-f4['F11'] = f4.Destino.str.extract('(\d{8,})')  # Extrae el valor F11
+f4['F11'] = f4.Destino.str.extract('([1]\d{7,})')  # Extrae el valor F11
 f4.to_csv(f'output/{dt_string}-f4-output.csv', sep=';', index=False)
 num_fonces = f4['F11'].notna().sum()
 

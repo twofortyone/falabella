@@ -25,143 +25,89 @@ cost_column = 'ct'
 status_column = 'tipmc'
 qty_column = 'cantidad_trx_actual'
 upc_column = 'upc'
-f5_col = 'f5'
-f3_col = 'f3'
-f4_col = 'f4'
-f11_col= 'f11'
+fcols = ['f3','f4','f5','f11']
 # --------------------------------------------------------------------------------------------
-f5 = pd.read_csv(f'input/nc_3000/210617/210610-162143-f5-output.csv', sep=';', dtype='object')
-f4 = pd.read_csv(f'input/nc_3000/210617/210616-100307-f4-output.csv', sep=';', dtype='object')
-kpi = pd.read_csv(f'input/nc_3000/210617/210616-101000-kpi.csv', sep=';', dtype='object')
-nc = pd.read_csv(f'input/nc_3000/210617/210618_nc.csv', sep=';', dtype='object')
-f3 = pd.read_csv(f'input/nc_3000/210617/210616-082924-f3.csv', sep=';', dtype='object')
-refact = pd.read_csv(f'input/nc_3000/210617/210616-refact.csv', sep=';', dtype='object')
+# Cargar data
+data = []
+names = ['f3', 'f4', 'f5', 'kpi','refact', 'cierre_nc']
+
+for name in names:
+    data.append(pd.read_csv(f'input/nc_3000/210625/210625-110311-{name}.csv', sep=';', dtype='object'))
+
+f3, f4, f5, kpi, refact, nc = data[0],data[1],data[2],data[3],data[4],data[5]
 
 nc.drop(nc.columns[77:108], axis=1, inplace=True)
-f5 = ct.normalizar_cols(f5)
-f4 = ct.normalizar_cols(f4)
-f3 = ct.normalizar_cols(f3)
-kpi = ct.normalizar_cols(kpi)
-nc = ct.normalizar_cols(nc)
-refact = ct.normalizar_cols(refact)
 
-f5 = ct.convertir_a_numero(f5, ['cant. recibida', 'cant. pickeada'])
+f5 = ct.convertir_a_numero(f5, ['cant_recibida', 'cant_pickeada'])
 f4 = ct.convertir_a_numero(f4, ['cantidad'])
 nc = ct.convertir_a_numero(nc, [cost_column,'cantidad_trx_actual'])
 
 nc = ct.limpiar_cols(nc, [status_column, 'esmc'])
 #nc[status_column] = nc[status_column].apply(unidecode)
 #TODO cambiar fechas de texto a date 
-colsf5 = ['fe. reserva', 'fe. envo', 'fe. recep']
+colsf5 = ['fe_reserva', 'fe_envo', 'fe_recep']
 newcolsf5 = ['aaaa reserva', 'aaaa envio', 'aaaa recep']
 f5[newcolsf5] = f5[colsf5].apply(lambda x: x.str.extract('(\d{4})', expand=False))
 
-f4['aa creacion'] = f4['fecha creacion'].str.split('-').str[2]
-
-nc.drop(['foto', 'llave_f12', 'llave_oc', 'llave_so', 'duplicado', 
-        'fecha_proceso','terminal', 'secuencia','transaccion', 'boleta', 
-        'fecha_proc_ant', 'terminal_ant','secuencia_ant', 'cod_trx_ant', 
-        'boleta_ant','ctip_prd','xtip_prd', 'desc_sku', 'cantidad_trx_anterior',
-        'costo_prmd', 'costo_rep', 'monto_trx_actual','monto_trx_anterior', 
-        'efectivo_nc', 'oc_act', 'oc_ant','primera_do_f12', 'crut_co', 'xdvrut_co', 
-        'nrut_rcp', 'xdvrut_rcp','bretira_dsp', 'retira_cliente', 'nsuborden', 
-        'local_ab', 'local_via','fecha_eta', 'cestado', 'estado_f12_srx', 'csubestado',
-        'suestado_dx','cproblema', 'xnoentrega','tipo_caso', 'dif_dias', 'tipificacion', 
-        'subtipo', 'f5.1', 'f3.1','f4.1', 'f11.1','motivo_cierre', 'subtipo.1'], axis=1, inplace=True)
-
-f4.drop([ 'local', 'desc. local', 'tipo red.inv', 'usuario creacion', 'fecha reserva',
-       'usuario reserva', 'fecha envio', 'usuario envio', 'destino',
-       'r.u.t destino', 'centro de costos', 'desc.centro e costo', 'linea',
-        'subclase', 'descripcion subclase','nro. producto', 'precio vta', 
-       'precio costo', 'total precio vta', 'total precio costo',], axis=1, inplace = True)
-
-f3.drop([ 'nro guia', 'tipo producto', 'marca', 'subclase', 'descripcion.1', 'clase',
-       'descripcion.2', 'sublinea', 'descripcion.3', 'linea', 'descripcion.4',
-       'proveedor', 'rut proveedor', 'descripcion.5', 'estado', 'cant*costo', 'cant*costoprmd',
-       'diferencia', 'cant*precio', 'tipo documento para dev',
-       'usuario que confirma', 'nc proveedor'], axis=1, inplace=True )
+f4['aa creacion'] = f4['fecha_creacion'].str.split('-').str[2]
 
 nc.reset_index(inplace=True)
 nc.rename(columns={'index': index_name}, inplace=True)
 cerrado = nc[nc['esmc']=='cerrado']
-cerrado[status_column] = cerrado[status_column].apply(unidecode)
+#cerrado.loc[:,status_column] = cerrado.loc[:,status_column].apply(unidecode)
 
 ica = InternalControlAnalysis(nc, index_name, cost_column, status_column, qty_column, upc_column)
-ica.set_fcols([f3_col, f4_col, f5_col, f11_col,'','cod_aut_nc'])
+ica.set_fcols([fcols[0], fcols[1], fcols[2], fcols[3],'','cod_aut_nc'])
 #TODO fix f12 number in f4_verify
 
-def cierre_f5(bd, status):
-    df1 = bd[bd[status_column]==status]
-    df2 = ica.get_fnan( df1, f5_col, 'F5')
-    df3 = ica.get_duplicates( df2, ['cod_aut_nc', 'local_trx','upc', 'cantidad_trx_actual'], 'Cod Aut + Local + UPC + Qty')
-    ne = ica.get_notfound( df3, f5, [f5_col,'upc'], ['transfer','upc'], 'transfer', 'F5|UPC|Qty')
-    df4 = pd.merge(df3, f5, left_on=[f5_col,'upc'], right_on=['transfer','upc'])
-    df5 = ica.get_diffvalue(df4, 'estado_y', 'Recibido', 'NRE', 'Registro con estado diferente a recibido')
-    df6 = ica.get_equalvalue(df5, 'motivo discrepancia', 'F5 NO RECIBIDO', 'MDI', 'Registro con motivo de disc: F5 no recibido')
-    df7 = ica.get_diffvalue(df6, 'aaaa reserva', '2021', 'NAA', 'Registro con año de reserva diferente a 2021')
-    comment = 'La cantidad sumada de los cod. aut. nc de un F5 es mayor que la cantidad del F5'
-    df8 = ica.get_diffqty_pro(df7, 'cantidad_trx_actual', 'cant. recibida', 'cod_aut_nc', 'transfer', comment)
-    iokf5 = df8[index_name].values
-    ica.update_db(iokf5, 'GCO','OKK')
-    ica.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY')
-    #print('-----------------------------------')
-    #print(f'## {status}')
-    #print(nc[[cost_column,'GCO']].groupby(['GCO']).agg(['sum', 'count']).sort_values(by=(cost_column,'sum'), ascending=False))
-
-def cierre_f4(bd, status):
-    df1 = bd[bd[status_column]==status]
-    df2 = ica.get_fnan( df1, f4_col, 'F4')
-    df3 = ica.get_duplicates( df2, ['cod_aut_nc', 'local_trx','upc', 'cantidad_trx_actual'], 'Cod Aut + Local + UPC + Qty')
-    ne = ica.get_notfound( df3, f4, [f4_col,'upc'], ['nro. red. inventario','upc'], 'nro. red. inventario', 'F4|UPC|Qty')
-    df4 = pd.merge(df3, f4, left_on=[f4_col,'upc'], right_on=['nro. red. inventario','upc'])
-    df5 = ica.get_equalvalue(df4, 'estado_y', 'Anulado', 'ANU', 'Registro con estado anulado')
-    df6 = ica.get_diffvalue(df5, 'aa creacion', '2021', 'NAA', 'Registro con año de creación diferente a 2021')
-    comment = 'La cantidad sumada de los cod. aut. nc de un F4 es mayor que la cantidad del F4'
-    df7 = ica.get_diffqty_pro(df6, 'cantidad_trx_actual', 'cantidad','cod_aut_nc', f4_col, comment)
-    iokf5 = df7[index_name].values
-    ica.update_db(iokf5, 'GCO','OKK')
-    ica.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY') 
-
-lista_tipmc_f5 = ['con mc asociada','compensacion con ct verde','se asocia f11-conciliacion con transportadora',
+lista_tipmc_f5 = ['f5 en revisión', 'con mc asociada','compensación con ct verde','se asocia f11-conciliacion con transportadora',
 'con quiebre asociado','con f11 tipo cliente asociado','se asocia f3-devuelto a proveedor',
 'con ro asociado','compensa con local de venta/anulado x user', 'f12 en digitado sin salida']
 
-# 'devolucion no efectiva/nueva facturacion',
-# 'compensa con el mismo local',
-# 'baja con cargo a dependencia por politicas/definiciones',
-# 'local venta 3000/no aplica carga', 'sku garantia/armado',
-# 'error en generacion de nota credito']
-
 print('Análisis F5s')
-for tipo in tqdm(lista_tipmc_f5): 
-    #cierre_f5(cerrado, tipmc)
+for tipo in tqdm(lista_tipmc_f5):
     ica.f5_verify(f5, tipo, '2021', 'cod_aut_nc')
 
-lista_tipm_f4 = ['se asocia f4-baja de inventario-menaje', 'baja con cargo a linea por costos']
+lista_tipm_f4 = ['se asocia f4-baja de inventario-menaje', 'baja con cargo a linea por costos', 'se asocia f4-baja de inventario-menaje / en revisión f4']
 print('Análisis F4s')
 for tipo2 in tqdm(lista_tipm_f4):
-    #cierre_f4(cerrado, tipmc2)
     ica.f4_verify(f4, tipo2, '2021')
 
-ica.f5_verify_local(f5, 'compensacion con dvd administrativo', '2021', 'cod_aut_nc', '3001')
+ica.f5_verify_local(f5, 'compensación con dvd administrativo', '2021', 'cod_aut_nc', '3001')
 print('cts ------------------------------------------------------------')
-nil = ica.f5_verify_local_list(f5, 'compensacion con ct ciudades', '2021', 'cod_aut_nc', 'CTs',cts)
+nil = ica.f5_verify_local_list(f5, 'compensación con ct ciudades', '2021', 'cod_aut_nc', 'CTs',cts)
 print(nil)
 print('preventas ------------------------------------------------------------')
-nil = ica.f5_verify_local_list(f5,'compensacion con preventas', '2021', 'cod_aut_nc', 'preventas',preventas)
+nil = ica.f5_verify_local_list(f5,'compensación con preventas', '2021', 'cod_aut_nc', 'preventas',preventas)
 print(nil)
 print('tiendas ------------------------------------------------------------')
-nil = ica.f5_verify_local_list(f5,'compensacion con tienda', '2021', 'cod_aut_nc', 'tiendas ',tiendas)
+nil = ica.f5_verify_local_list(f5,'compensación con tienda', '2021', 'cod_aut_nc', 'tiendas ',tiendas)
 print(nil)
+
 #ica.get_duplicates(nc, ['cod_aut_nc', 'local_trx','upc', 'cantidad_trx_actual'], 'Cod Aut + Local + UPC + Qty')
 
 nc = ica.get_db()
 nc.loc[nc['GCO'].notna(), 'checked'] = 'y'
 nc.loc[nc['GCO'].isna(), 'checked'] = 'n'
 
+# Identificar duplicados en toda la base 
+du = nc[nc.duplicated(['cod_aut_nc', 'local_trx','upc', 'cantidad_trx_actual'], keep=False)]
+idu = du[index_name].values
+nc.loc[idu, 'DUP'] = 'Y'
+nc.loc[nc['DUP'].isna(), 'DUP'] = 'N'
+print(nc.groupby('DUP')[cost_column].sum())
+
 print(cerrado[[status_column, cost_column]].groupby(status_column).sum().sort_values(by=cost_column, ascending=False))
 
 res = nc.groupby([status_column,'GCO']).agg({cost_column:['sum', 'count']}).sort_values([status_column,('ct','sum')],ascending=False)
 print(res)
 print(res[('ct', 'sum')].sum())
-nc.to_csv(f'output/{dt_string}-nc-output.csv', sep=';', index=False)
+
+def guardar():
+    nc.to_csv(f'output/{dt_string}-nc-output.csv', sep=';', index=False)
+    nc2 = nc.merge(f5, how='left', left_on=[fcols[2],upc_column], right_on=['transfer','upc'], validate='many_to_one')
+    nc3 = nc2.merge(f4, how='left',  left_on=[fcols[1],upc_column], right_on=['nro_red_inventario','upc'],validate='many_to_one')
+    nc2.to_csv(f'output/{dt_string}-cierres-nc-all.csv', sep=';', index=False) 
+    
+
+guardar()

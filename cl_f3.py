@@ -3,7 +3,7 @@ from datetime import datetime
 
 # Verificar para cada archivo 
 num_f4_files = 1
-f3_input_name = '210623_f3_0' # Prefijo del nombre del archivo 
+f3_input_name = '210625_f3' # Prefijo del nombre del archivo 
 #--------------------------------------------------------------
 dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
 
@@ -35,4 +35,4 @@ fv1 = fv1[fv1['Nro Devolucion'].notnull()]
 
 print('Se actualizaron ' + str(rega-fv1.shape[0]) + ' registros')
 
-fv1.to_csv(f'output/{dt_string}-f3.csv', sep=';', index=False)
+fv1.to_csv(f'output/{dt_string}-f3-output.csv', sep=';', index=False)
