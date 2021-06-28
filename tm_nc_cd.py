@@ -1,11 +1,7 @@
-from os import dup
 import pandas as pd
 from datetime import datetime
-import numpy as np
 from cl_cleaning import CleaningText as ct 
-from ica_nc import InternalControlAnalysis
-from report import Report 
-from unidecode import unidecode
+from ica_nc import CierresNC
 from tqdm import tqdm
 
 pd.set_option('float_format', '{:,.2f}'.format)
@@ -25,7 +21,7 @@ cost_column = 'ct'
 status_column = 'tipmc'
 qty_column = 'cantidad_trx_actual'
 upc_column = 'upc'
-fcols = ['f3','f4','f5','f11']
+fcols = ['f3','f4','f5','f11', '', 'cod_aut_nc']
 # --------------------------------------------------------------------------------------------
 # Cargar data
 data = []
@@ -44,6 +40,7 @@ nc = ct.convertir_a_numero(nc, [cost_column,'cantidad_trx_actual'])
 
 nc = ct.limpiar_cols(nc, [status_column, 'esmc'])
 #nc[status_column] = nc[status_column].apply(unidecode)
+
 #TODO cambiar fechas de texto a date 
 colsf5 = ['fe_reserva', 'fe_envo', 'fe_recep']
 newcolsf5 = ['aaaa reserva', 'aaaa envio', 'aaaa recep']
@@ -56,8 +53,8 @@ nc.rename(columns={'index': index_name}, inplace=True)
 cerrado = nc[nc['esmc']=='cerrado']
 #cerrado.loc[:,status_column] = cerrado.loc[:,status_column].apply(unidecode)
 
-ica = InternalControlAnalysis(nc, index_name, cost_column, status_column, qty_column, upc_column)
-ica.set_fcols([fcols[0], fcols[1], fcols[2], fcols[3],'','cod_aut_nc'])
+cierres_nc = CierresNC(nc, index_name)
+cierres_nc.set_fcols(fcols, [status_column, upc_column, cost_column, qty_column])
 #TODO fix f12 number in f4_verify
 
 lista_tipmc_f5 = ['f5 en revisión', 'con mc asociada','compensación con ct verde','se asocia f11-conciliacion con transportadora',
@@ -66,27 +63,25 @@ lista_tipmc_f5 = ['f5 en revisión', 'con mc asociada','compensación con ct ver
 
 print('Análisis F5s')
 for tipo in tqdm(lista_tipmc_f5):
-    ica.f5_verify(f5, tipo, '2021', 'cod_aut_nc')
+    cierres_nc.f5_verify(f5, tipo, '2021', 'cod_aut_nc')
 
 lista_tipm_f4 = ['se asocia f4-baja de inventario-menaje', 'baja con cargo a linea por costos', 'se asocia f4-baja de inventario-menaje / en revisión f4']
 print('Análisis F4s')
 for tipo2 in tqdm(lista_tipm_f4):
-    ica.f4_verify(f4, tipo2, '2021')
+    cierres_nc.f4_verify(f4, tipo2, '2021')
 
-ica.f5_verify_local(f5, 'compensación con dvd administrativo', '2021', 'cod_aut_nc', '3001')
+cierres_nc.f5_verify_local(f5, 'compensación con dvd administrativo', '2021', 'cod_aut_nc', '3001')
 print('cts ------------------------------------------------------------')
-nil = ica.f5_verify_local_list(f5, 'compensación con ct ciudades', '2021', 'cod_aut_nc', 'CTs',cts)
+nil = cierres_nc.f5_verify_local_list(f5, 'compensación con ct ciudades', '2021', 'cod_aut_nc', 'CTs',cts)
 print(nil)
 print('preventas ------------------------------------------------------------')
-nil = ica.f5_verify_local_list(f5,'compensación con preventas', '2021', 'cod_aut_nc', 'preventas',preventas)
+nil = cierres_nc.f5_verify_local_list(f5,'compensación con preventas', '2021', 'cod_aut_nc', 'preventas',preventas)
 print(nil)
 print('tiendas ------------------------------------------------------------')
-nil = ica.f5_verify_local_list(f5,'compensación con tienda', '2021', 'cod_aut_nc', 'tiendas ',tiendas)
+nil = cierres_nc.f5_verify_local_list(f5,'compensación con tienda', '2021', 'cod_aut_nc', 'tiendas ',tiendas)
 print(nil)
 
-#ica.get_duplicates(nc, ['cod_aut_nc', 'local_trx','upc', 'cantidad_trx_actual'], 'Cod Aut + Local + UPC + Qty')
-
-nc = ica.get_db()
+nc = cierres_nc.get_db()
 nc.loc[nc['GCO'].notna(), 'checked'] = 'y'
 nc.loc[nc['GCO'].isna(), 'checked'] = 'n'
 
@@ -107,7 +102,6 @@ def guardar():
     nc.to_csv(f'output/{dt_string}-nc-output.csv', sep=';', index=False)
     nc2 = nc.merge(f5, how='left', left_on=[fcols[2],upc_column], right_on=['transfer','upc'], validate='many_to_one')
     nc3 = nc2.merge(f4, how='left',  left_on=[fcols[1],upc_column], right_on=['nro_red_inventario','upc'],validate='many_to_one')
-    nc2.to_csv(f'output/{dt_string}-cierres-nc-all.csv', sep=';', index=False) 
-    
+    nc3.to_csv(f'output/{dt_string}-cierres-nc-all.csv', sep=';', index=False) 
 
-guardar()
+#guardar()

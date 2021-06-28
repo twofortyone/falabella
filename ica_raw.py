@@ -184,3 +184,27 @@ class InternalControlAnalysis:
         self.db.loc[imvalue, 'Comentario GCO'] = comment
         bdquery_res = bdquery[bdquery[valuecol]<=value]
         return bdquery_res
+        
+    def get_diffqty_pro_f5(self, bdquery, qty1col, qty2col, fl, ff, comment):
+        """ 
+        Get rows with different quantity
+        :param bdquery: dataframe to identify different quantity
+        :param qty1col: (string) quantity 1 
+        :param qty2col: (string) quantity 2 
+        """
+        s = bdquery[[fl, ff,qty1col, qty2col, 'cant_pickeada']].groupby([fl, ff]).sum().reset_index()
+        fs = list(s[(s[qty1col]!= s[qty2col]) & (s[qty1col]!= s['cant_pickeada'])][fl].values)
+        dc = bdquery[bdquery[fl].isin(fs)] # Registros con cantidades diferentes
+        idc = dc[self.index_column].values
+        self.db.loc[idc, 'GCO' ] = 'NCC'
+        self.db.loc[idc, 'Comentario GCO' ] = comment
+        bdquery_res = bdquery[~bdquery[fl].isin(fs)]
+        return bdquery_res
+    
+    def get_notinlist(self, bdquery, valuecol, lista, note, comment):
+        notinlist3 = bdquery[~bdquery[valuecol].isin(lista)]
+        inotinlist = notinlist3[self.index_column].values
+        self.db.loc[inotinlist, 'GCO'] = note
+        self.db.loc[inotinlist, 'Comentario GCO'] = comment
+        bdquery_res = bdquery[bdquery[valuecol].isin(lista)]
+        return bdquery_res, list(notinlist3['local_recep'])
