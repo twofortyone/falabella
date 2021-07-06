@@ -12,17 +12,17 @@ pd.set_option('float_format', '{:,.2f}'.format)
 
 # Cargar data
 data = []
-names = ['f3', 'f4', 'f5', 'kpi','refact', 'cierre_f11']
+names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_cd_21']
 
 for name in names:
     data.append(pd.read_csv(f'input/cierres_f11s/210629_2021/210629-143015-{name}.csv', sep=';', dtype='object'))
 
-f3, f4, f5, kpi, refact, bc11 = data[0],data[1],data[2],data[3],data[4],data[5]
+f3, f4, f5, kpi, refact, cf11 = data[0],data[1],data[2],data[3],data[4],data[5]
 
-bc11 = bc11.rename(columns={'f11':'nfolio'})
+cf11 = cf11.rename(columns={'f11':'nfolio'})
 # Variables 
 dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
-index_name = 'indice_bc11'
+index_name = 'indice_cf11'
 cost_column = 'costo_total'
 status_column = 'status_final'
 qty_column = 'qproducto'
@@ -30,26 +30,11 @@ upc_column = 'prd_upc'
 fcols = ['f3','f4','f5','nfolio','f12']
 
 # TODO ---- revisar desde aquí 
- 
-bc11 = ct.limpiar_cols(bc11, fcols)
-bc11 = ct.limpiar_cols(bc11, [status_column])
-f4 = ct.limpiar_cols(f4, ['nro_red_inventario','upc', 'cantidad'])
-
-bc11 = ct.convertir_a_numero(bc11, [cost_column, 'qproducto']) # Convertir columnas de precio a dato numérico
-bc11.prd_upc= bc11.prd_upc.str.split('.').str[0] # Limpiar la columna de upc 
-
-f3['cantidad'] = f3['cantidad'].fillna('N/A')
-f3.loc[~f3.cantidad.str.isdigit(),'cantidad'] = np.nan 
-f3 = ct.convertir_a_numero(f3, ['cantidad']) # Convertir columnas de precio a dato numérico
-f4['cantidad'] = f4['cantidad'].fillna('N/A')
-f4.loc[~f4.cantidad.str.isdigit(),'cantidad'] = np.nan 
-f4 = ct.convertir_a_numero(f4, ['cantidad']) # Convertir columnas de precio a dato numérico
-f5 = ct.convertir_a_numero(f5, ['cant_recibida','cant_pickeada'])
+cf11 = ct.limpiar_cols(cf11, [status_column])
+cf11.prd_upc= cf11.prd_upc.str.split('.').str[0] # Limpiar la columna de upc 
 
 # TODO Fin primera etapa 
-
 kpi['fecha_paletiza'] = pd.to_datetime(kpi['fecha_paletiza'])
-
 colsf5 = ['fe_reserva', 'fe_envo', 'fe_recep']
 newcolsf5 = ['aaaa reserva', 'aaaa envio', 'aaaa recep']
 f5[newcolsf5] = f5[colsf5].apply(lambda x: x.str.extract('(\d{4})', expand=False))
@@ -65,21 +50,14 @@ f3[newcolsf3] = f3[colsf3].apply(lambda x: x.str.extract('(\d{4})', expand=False
 f4['aa creacion'] = f4['fecha_creacion'].str.split('-').str[2]
 
 # Generar indice en columna
-bc11.reset_index(inplace=True)
-bc11.rename(columns={'index': index_name}, inplace=True)
-bc11[status_column] = bc11[status_column].fillna('N/A')
-bc11[status_column] = bc11[status_column].apply(unidecode)
-
-# Toma los campos de las Fs y les asigna nan a los que no sean númericos 
-for f in fcols:
-    aux = bc11[bc11[f].notna()]
-    indaux = aux[~aux[f].str.isdigit()][index_name].values
-    bc11.loc[indaux, f] = np.nan
- 
+cf11.reset_index(inplace=True)
+cf11.rename(columns={'index': index_name}, inplace=True)
+cf11[status_column] = cf11[status_column].fillna('N/A')
+cf11[status_column] = cf11[status_column].apply(unidecode) 
 # TODO ---- revisar hasta aquí 
 
 # Inicio de análisis de cierres 
-cierres = CierresF11(bc11, index_name)
+cierres = CierresF11(cf11, index_name)
 cierres.set_fcols(fcols, [status_column, upc_column, cost_column, qty_column])
 
 cols = [fcols[4],upc_column, qty_column]
@@ -101,16 +79,16 @@ cierres.refact_verify(refact, 'cierre x recupero con cliente - refacturacion - b
 
 # Tareas finales 
 cierres.finals()
-bc11 = cierres.ica.get_db()
+cf11 = cierres.ica.get_db()
 
-print(bc11.groupby('gco_dup')[cost_column].sum())
+print(cf11.groupby('gco_dup')[cost_column].sum())
 
-res = bc11.groupby([status_column,'GCO']).agg({cost_column:['sum', 'size']}).sort_values(by=[status_column,(cost_column,'sum')], ascending=False)
+res = cf11.groupby([status_column,'GCO']).agg({cost_column:['sum', 'size']}).sort_values(by=[status_column,(cost_column,'sum')], ascending=False)
 print(res)# Presenta todos los estados 
 
 def guardar():
-    bc11.to_csv(f'output/{dt_string}-novedades-cierref11.csv', sep=';', index=False, encoding='utf-8') # Guarda el archivo 
-    bdcia = bc11.merge(f3, how='left', left_on=[fcols[0],'prd_upc'], right_on=['nro_devolucion','upc'], validate='many_to_one')
+    cf11.to_csv(f'output/{dt_string}-novedades-cierref11.csv', sep=';', index=False, encoding='utf-8') # Guarda el archivo 
+    bdcia = cf11.merge(f3, how='left', left_on=[fcols[0],'prd_upc'], right_on=['nro_devolucion','upc'], validate='many_to_one')
     bdcia2 = bdcia.merge(f4, how='left',  left_on=[fcols[1],'prd_upc'], right_on=['nro_red_inventario','upc'],validate='many_to_one')
     bdcia3 = bdcia2.merge(f5, how='left', left_on=[fcols[2],'prd_upc'], right_on=['transfer','upc'], validate='many_to_one')
     bdcia4 = bdcia3.merge(kpi, how='left',left_on=[fcols[3]], right_on=['entrada'],validate='many_to_one')

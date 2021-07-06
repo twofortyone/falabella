@@ -36,13 +36,7 @@ c11t = ct.limpiar_cols(c11t, fcols)
 c11t = ct.limpiar_cols(c11t, [status_column])
 f4 = ct.limpiar_cols(f4, ['nro_red_inventario','upc', 'cantidad'])
 
-c11t = ct.convertir_a_numero(c11t, [cost_column, 'qproducto']) # Convertir columnas de precio a dato numérico
-c11t.prd_upc= c11t.prd_upc.str.split('.').str[0] # Limpiar la columna de upc 
-
-f4['cantidad'] = f4['cantidad'].fillna('N/A')
-f4.loc[~f4.cantidad.str.isdigit(),'cantidad'] = np.nan 
-f4 = ct.convertir_a_numero(f4, ['cantidad']) # Convertir columnas de precio a dato numérico
-f3 = ct.convertir_a_numero(f3, ['cantidad']) # Convertir columnas de precio a dato numérico
+#c11t.prd_upc= c11t.prd_upc.str.split('.').str[0] # Limpiar la columna de upc 
 
 # TODO Fin primera etapa 
 
@@ -67,13 +61,6 @@ c11t.reset_index(inplace=True)
 c11t.rename(columns={'index': index_name}, inplace=True)
 c11t[status_column] = c11t[status_column].fillna('N/A')
 c11t[status_column] = c11t[status_column].apply(unidecode)
-
-# Toma los campos de las Fs y les asigna nan a los que no sean númericos 
-for f in fcolaux:
-    aux = c11t[c11t[f].notna()]
-    indaux = aux[~aux[f].str.isdigit()][index_name].values
-    c11t.loc[indaux, f] = np.nan
-
 # TODO ---- revisar hasta aquí 
 
 # Inicio de análisis de cierres 

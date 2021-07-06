@@ -12,16 +12,16 @@ pd.set_option('float_format', '{:,.2f}'.format)
 
 # Cargar data
 data = []
-names = ['f3', 'f4', 'f5', 'kpi','refact', 'cierre_f11']
+names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_cd_20']
 
 for name in names:
     data.append(pd.read_csv(f'input/cierres_f11s/210630/210630-095612-{name}.csv', sep=';', dtype='object'))
 
-f3, f4, f5, kpi, refact, bc11 = data[0],data[1],data[2],data[3],data[4],data[5]
+f3, f4, f5, kpi, refact, cf11 = data[0],data[1],data[2],data[3],data[4],data[5]
 
 # Variables 
 dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
-index_name = 'indice_bc11'
+index_name = 'indice_cf11'
 cost_column = 'total_costo_promedio'
 status_column = 'status_nuevo'
 qty_column = 'qproducto'
@@ -29,22 +29,9 @@ upc_column = 'prd_upc'
 fcols = ['f3nuevo','f4_nuevo','f5','nfolio','f12']
 
 # TODO ---- revisar desde aquí 
- 
-bc11 = ct.limpiar_cols(bc11, fcols)
-bc11 = ct.limpiar_cols(bc11, [status_column])
-f4 = ct.limpiar_cols(f4, ['nro_red_inventario','upc', 'cantidad'])
+cf11 = ct.limpiar_cols(cf11, [status_column])
 
-bc11 = ct.convertir_a_numero(bc11, [cost_column, 'qproducto']) # Convertir columnas de precio a dato numérico
-bc11.prd_upc= bc11.prd_upc.str.split('.').str[0] # Limpiar la columna de upc 
-
-f3['cantidad'] = f3['cantidad'].fillna('N/A')
-f3.loc[~f3.cantidad.str.isdigit(),'cantidad'] = np.nan 
-f3 = ct.convertir_a_numero(f3, ['cantidad']) # Convertir columnas de precio a dato numérico
-f4['cantidad'] = f4['cantidad'].fillna('N/A')
-f4.loc[~f4.cantidad.str.isdigit(),'cantidad'] = np.nan 
-f4 = ct.convertir_a_numero(f4, ['cantidad']) # Convertir columnas de precio a dato numérico
-f5 = ct.convertir_a_numero(f5, ['cant_recibida','cant_pickeada'])
-# TODO Fin primera etapa 
+cf11.prd_upc= cf11.prd_upc.str.split('.').str[0] # Limpiar la columna de upc 
 
 kpi['fecha_paletiza'] = pd.to_datetime(kpi['fecha_paletiza'])
 
@@ -63,21 +50,15 @@ f3[newcolsf3] = f3[colsf3].apply(lambda x: x.str.extract('(\d{4})', expand=False
 f4['aa creacion'] = f4['fecha_creacion'].str.split('-').str[2]
 
 # Generar indice en columna
-bc11.reset_index(inplace=True)
-bc11.rename(columns={'index': index_name}, inplace=True)
-bc11[status_column] = bc11[status_column].fillna('N/A')
-bc11[status_column] = bc11[status_column].apply(unidecode)
-
-# Toma los campos de las Fs y les asigna nan a los que no sean númericos 
-for f in fcols:
-    aux = bc11[bc11[f].notna()]
-    indaux = aux[~aux[f].str.isdigit()][index_name].values
-    bc11.loc[indaux, f] = np.nan
+cf11.reset_index(inplace=True)
+cf11.rename(columns={'index': index_name}, inplace=True)
+cf11[status_column] = cf11[status_column].fillna('N/A')
+cf11[status_column] = cf11[status_column].apply(unidecode)
 
 # TODO ---- revisar hasta aquí 
 
 # Inicio de análisis de cierres 
-cierres = CierresF11(bc11, index_name)
+cierres = CierresF11(cf11, index_name)
 cierres.set_fcols(fcols, [status_column, upc_column, cost_column, qty_column])
 
 cols = [fcols[4],upc_column, qty_column]
@@ -99,16 +80,16 @@ cierres.refact_verify(refact, 'cierre x recupero con cliente - refacturacion - b
 
 # Tareas finales
 cierres.finals()
-bc11 = cierres.ica.get_db()
+cf11 = cierres.ica.get_db()
 
 # 30 de junio de 2021 
 # Comparar duplicados con los de michael 
-
+# TODO  pasar a método 
 concept1 = 'cierre x duplicidad (f11 con mismo f12+sku+cantidad)'
 concept2 = 'registro duplicado en base de datos'
-sin_cat_dup = bc11[(bc11['status_nuevo']!= concept1)&(bc11['status_nuevo']!=concept2)]
+sin_cat_dup = cf11[(cf11['status_nuevo']!= concept1)&(cf11['status_nuevo']!=concept2)]
 
-cat_dup = bc11[((bc11['status_nuevo']== concept1)|(bc11['status_nuevo']==concept2))]
+cat_dup = cf11[((cf11['status_nuevo']== concept1)|(cf11['status_nuevo']==concept2))]
 
 dup_cols = ['f12', 'prd_upc']
 cat_dup_mas_gco = cat_dup[cat_dup['gco_dup']=='y'] # Duplicados para MC y GCO
@@ -118,27 +99,27 @@ redcols.append(index_name)
 cat_dup_mas_gco = cat_dup_mas_gco[redcols]
 cat_dup_mas_gco.drop_duplicates(dup_cols, inplace=True)
 
-bc11.loc[cat_dup_mas_gco['indice_bc11'].values, 'dupmc'] = 'y'
+cf11.loc[cat_dup_mas_gco['indice_cf11'].values, 'dupmc'] = 'y'
 
 mdup = pd.merge(sin_cat_dup, cat_dup_mas_gco, on=dup_cols,validate='many_to_one') # Registros unicos MC de duplicados
-bc11.loc[mdup['indice_bc11'].values, 'dupmc'] = 'y'
+cf11.loc[mdup['indice_cf11'].values, 'dupmc'] = 'y'
 
 aux = mdup[mdup.duplicated(dup_cols)]
-bc11.loc[aux['indice_bc11'].values, 'dupmc'] = np.nan
-bc11.loc[aux['indice_bc11'].values,'error_ru'] = 'y'
+cf11.loc[aux['indice_cf11'].values, 'dupmc'] = np.nan
+cf11.loc[aux['indice_cf11'].values,'error_ru'] = 'y'
 
-bc11.loc[(bc11['dupmc'].isna())& (bc11['gco_dup'] =='y') ,'gco_dupall'] = 'y'
-bc11.loc[(bc11['dupmc'].isna())& (bc11['gco_dup'] =='y') & (bc11.GCO =='OKK'),'Comentario GCO'] = 'Coincidencia exacta + Registro duplicado en DB'
+cf11.loc[(cf11['dupmc'].isna())& (cf11['gco_dup'] =='y') ,'gco_dupall'] = 'y'
+cf11.loc[(cf11['dupmc'].isna())& (cf11['gco_dup'] =='y') & (cf11.GCO =='OKK'),'Comentario GCO'] = 'Coincidencia exacta + Registro duplicado en DB'
 
-print(bc11.groupby('gco_dup')[cost_column].sum())
-print(bc11.groupby('gco_dupall')[cost_column].sum())
+print(cf11.groupby('gco_dup')[cost_column].sum())
+print(cf11.groupby('gco_dupall')[cost_column].sum())
 
-res = bc11.groupby([status_column,'GCO']).agg({cost_column:['sum', 'size']}).sort_values(by=[status_column,(cost_column,'sum')], ascending=False)
+res = cf11.groupby([status_column,'GCO']).agg({cost_column:['sum', 'size']}).sort_values(by=[status_column,(cost_column,'sum')], ascending=False)
 print(res)# Presenta todos los estados 
 
 def guardar():
-    bc11.to_csv(f'output/{dt_string}-novedades-cierref11.csv', sep=';', index=False, encoding='utf-8') # Guarda el archivo 
-    bdcia = bc11.merge(f3, how='left', left_on=[fcols[0],'prd_upc'], right_on=['nro_devolucion','upc'], validate='many_to_one')
+    cf11.to_csv(f'output/{dt_string}-novedades-cierref11.csv', sep=';', index=False, encoding='utf-8') # Guarda el archivo 
+    bdcia = cf11.merge(f3, how='left', left_on=[fcols[0],'prd_upc'], right_on=['nro_devolucion','upc'], validate='many_to_one')
     bdcia2 = bdcia.merge(f4, how='left',  left_on=[fcols[1],'prd_upc'], right_on=['nro_red_inventario','upc'],validate='many_to_one')
     bdcia3 = bdcia2.merge(f5, how='left', left_on=[fcols[2],'prd_upc'], right_on=['transfer','upc'], validate='many_to_one')
     bdcia4 = bdcia3.merge(kpi, how='left',left_on=[fcols[3]], right_on=['entrada'],validate='many_to_one')

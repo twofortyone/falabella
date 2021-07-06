@@ -37,7 +37,41 @@ class CleaningText:
         return bd
         
     def limpiar_cols(bd, cols):
-        bd.loc[:,cols].fillna('N/A', inplace=True)
+        #bd.loc[:,cols].fillna('N/A', inplace=True)
         bd.loc[:,cols] = bd.loc[:,cols].apply(lambda x: x.str.strip('.!?$ \n\t').str.lower())
-        bd.loc[:,cols].fillna('N/A', inplace=True)
+        #bd.loc[:,cols].fillna('N/A', inplace=True)
         return bd
+
+    def strip_symbols(col):
+        return col.str.strip('.!?$ \n\t')
+    
+    def lower_col(col):
+        return col.str.lower()
+
+    def to_number(col ):
+        res = col.str.strip('.!?$ \n\t')
+        res = res.str.replace('.','', regex=False)
+        # Si f no es dígito => nan 
+        res = res.fillna('N/A')
+        res.loc[~res.str.isdigit()] = np.nan
+        # Convertir a num 
+        res = pd.to_numeric(res)
+        return res 
+
+    def clean_fnum(col):
+        res = col.str.strip('.!?$ \n\t')
+        res = res.str.replace('.','', regex=False)
+        # Si f = 0 => nan 
+        res.loc[res=='0'] = np.nan
+        # Si f no es dígito => nan 
+        res = res.fillna('N/A')
+        res.loc[~res.str.isdigit()] = np.nan
+        return res 
+    
+    def clean_num(col):
+        res = col.str.strip('.!?$ \n\t')
+        res = res.str.replace('.','', regex=False)
+        # Si f no es dígito => nan 
+        res = res.fillna('N/A')
+        res.loc[~res.str.isdigit()] = np.nan
+        return res 
