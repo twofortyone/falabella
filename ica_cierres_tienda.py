@@ -22,7 +22,8 @@ class CierresF11:
         df1 = self.db[self.db[self.pcols[0]]==status]
         df2 = self.ica.get_fnan( df1, self.fcols[2], 'F5')
         if df2.empty ==False: 
-            df3 = self.ica.get_duplicates( df2, [self.fcols[4], self.pcols[1], self.pcols[3] ], 'F12 + UPC + Cantidad')
+            #df3 = self.ica.get_duplicates( df2, [self.fcols[4], self.pcols[1], self.pcols[3] ], 'F12 + UPC + Cantidad')
+            df3 = df2
             ne = self.ica.get_notfound( df3, f5, [self.fcols[2], self.pcols[1]], ['transfer','upc'], 'transfer', 'F5|UPC|Qty')
             df4 = pd.merge(df3, f5, left_on=[self.fcols[2], self.pcols[1]], right_on=['transfer','upc'])
             if df4.empty ==False: 
@@ -53,7 +54,7 @@ class CierresF11:
             if df4.empty ==False: 
                 df5 = self.ica.get_equalvalue(df4, 'estado', 'Anulado', 'ANU', 'Registro anulado')
                 df6 = self.ica.get_diffvalue(df5, 'aa creacion', yyyy, 'NAA', f'Registro con año de creación diferente a {yyyy}')
-                df7 = self.ica.get_diffqty_pro(df6, self.pcols[3], 'cantidad',self.fcols[3],'nro_red_inventario', 'La cantidad sumada de los F11s de un F4 es mayor que la cantidad del F4')
+                df7 = self.ica.get_diffqty_pro(df6, self.pcols[3], 'cantidad',self.fcols[3],'nro_red_inventario', 'Cantidad de los F11s de un F4 > cantidad del F4')
                 iokf4 = df7[self.index_column].values
                 self.ica.update_db(iokf4,'GCO', 'OKK')
                 self.ica.update_db(iokf4,'Comentario GCO', 'Coincidencia exacta F4+UPC+QTY')
@@ -74,7 +75,7 @@ class CierresF11:
             df4 = pd.concat(lm, axis=0)
             if df4.empty ==False: 
                 df5 = self.ica.get_equalvalue(df4, 'descripcion6', 'Anulado', 'ANU', 'Registro anulado')
-                df6 = self.ica.get_diffqty_pro(df5, self.pcols[3], 'cantidad',self.fcols[3], 'nro_devolucion' ,'La cantidad sumada de los f11s de un f3 es mayor que la cantidad del f3')
+                df6 = self.ica.get_diffqty_pro(df5, self.pcols[3], 'cantidad',self.fcols[3], 'nro_devolucion' ,'Cantidad de los F11s de un F3 > cantidad del F3')
                 iokf3 = df6[self.index_column].values
                 self.ica.update_db(iokf3,'GCO', 'OKK')
                 self.ica.update_db(iokf3,'Comentario GCO', 'Coincidencia exacta F3+UPC+QTY')
@@ -115,7 +116,8 @@ class CierresF11:
         self.ica.update_db(iokf12,'GCO', 'OKK')
         self.ica.update_db(iokf12,'Comentario GCO', 'Coincidencia exacta')
 
+    def starting(self, cols):
+        self.ica.get_dup_all_db(cols)
+        
     def finals(self):
-        self.db = self.ica.get_db()
-        self.db.loc[self.db['GCO'].notna(), 'CH'] = 'DC'
-        self.db.loc[self.db['GCO'].isna(), 'CH'] = 'BL'
+        self.ica.get_checked()

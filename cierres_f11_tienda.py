@@ -5,6 +5,7 @@ from cl_cleaning import CleaningText as ct
 from ica_cierres_tienda import CierresF11
 from report import Report 
 from unidecode import unidecode
+import numpy as np 
 
 # Configuraciones
 pd.set_option('float_format', '{:,.2f}'.format)
@@ -26,6 +27,7 @@ status_column = 'motivo'
 qty_column = 'qproducto'
 upc_column = 'prd_upc'
 fcols = ['f','f','f','nfolio','f']
+fcolaux = ['f', 'nfolio']
 
 # TODO ---- revisar desde aquí 
 #c11t_tienda_cols = ['nfolio','prd_upc', 'qproducto', 'total_costo_promedio', 'f', 'motivo']
@@ -37,6 +39,8 @@ f4 = ct.limpiar_cols(f4, ['nro_red_inventario','upc', 'cantidad'])
 c11t = ct.convertir_a_numero(c11t, [cost_column, 'qproducto']) # Convertir columnas de precio a dato numérico
 c11t.prd_upc= c11t.prd_upc.str.split('.').str[0] # Limpiar la columna de upc 
 
+f4['cantidad'] = f4['cantidad'].fillna('N/A')
+f4.loc[~f4.cantidad.str.isdigit(),'cantidad'] = np.nan 
 f4 = ct.convertir_a_numero(f4, ['cantidad']) # Convertir columnas de precio a dato numérico
 f3 = ct.convertir_a_numero(f3, ['cantidad']) # Convertir columnas de precio a dato numérico
 
@@ -64,13 +68,18 @@ c11t.rename(columns={'index': index_name}, inplace=True)
 c11t[status_column] = c11t[status_column].fillna('N/A')
 c11t[status_column] = c11t[status_column].apply(unidecode)
 
+# Toma los campos de las Fs y les asigna nan a los que no sean númericos 
+for f in fcolaux:
+    aux = c11t[c11t[f].notna()]
+    indaux = aux[~aux[f].str.isdigit()][index_name].values
+    c11t.loc[indaux, f] = np.nan
+
 # TODO ---- revisar hasta aquí 
 
 # Inicio de análisis de cierres 
 cierres = CierresF11(c11t, index_name)
 cierres.set_fcols(fcols, [status_column, upc_column, cost_column, qty_column])
 
-#cierres.f4_verify(f4, 'f4 de merma-2020', '2020')
 lista_f4_2021 = ['f4']
 for status_nuevo in lista_f4_2021:
     cierres.f4_verify(f4, status_nuevo, '2021')
@@ -79,26 +88,15 @@ lista_f3_2021 = ['f3']
 for status_nuevo_f3 in lista_f3_2021:
     cierres.f3_verify(f3, status_nuevo_f3, '2021')
 
-#cierres.f5_verify(f5, 'producto en tienda', '2021')
-#cierres.kpi_verify(kpi, 'cierre x producto guardado despues de inventario', '2021', 'Recibido antes de 2021')
-#cierres.kpi_verify(kpi, 'cierre x producto guardado antes de inventario', '0000', 'Recibido después del 20 de enero de 2021')
-#cierres.refact_verify(refact, 'cierre x recupero con cliente - refacturacion - base fal.com')
-
 # Tareas finales 
 cierres.finals()
 c11t = cierres.ica.get_db()
-
-# du = c11t[c11t.duplicated([fcols[4],upc_column, qty_column], keep=False)]
-# idu = du[index_name].values
-# c11t.loc[idu, 'DUP'] = 'Y'
-# c11t.loc[c11t['DUP'].isna(), 'DUP'] = 'N'
-# print(c11t.groupby('DUP')[cost_column].sum())
 
 res = c11t.groupby([status_column,'GCO']).agg({cost_column:['sum', 'size']}).sort_values(by=[status_column,(cost_column,'sum')], ascending=False)
 print(res)# Presenta todos los estados 
 
 def guardar():
-    c11t.to_csv(f'output/{dt_string}-novedades-cf11t.csv', sep=';', index=False) # Guarda el archivo 
+    c11t.to_csv(f'output/{dt_string}-cf11_tienda.csv', sep=';', index=False) # Guarda el archivo 
     # bdcia = c11t.merge(f3, how='left', left_on=[fcols[0],'prd_upc'], right_on=['nro_devolucion','upc'], validate='many_to_one')
     # bdcia2 = bdcia.merge(f4, how='left',  left_on=[fcols[1],'prd_upc'], right_on=['nro_red_inventario','upc'],validate='many_to_one')
     # bdcia3 = bdcia2.merge(f5, how='left', left_on=[fcols[2],'prd_upc'], right_on=['transfer','upc'], validate='many_to_one')

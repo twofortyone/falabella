@@ -15,18 +15,19 @@ data = []
 names = ['f3', 'f4', 'f5', 'kpi','refact', 'cierre_f11']
 
 for name in names:
-    data.append(pd.read_csv(f'input/cierres_f11s/210630/210630-095612-{name}.csv', sep=';', dtype='object'))
+    data.append(pd.read_csv(f'input/cierres_f11s/210629_2021/210629-143015-{name}.csv', sep=';', dtype='object'))
 
 f3, f4, f5, kpi, refact, bc11 = data[0],data[1],data[2],data[3],data[4],data[5]
 
+bc11 = bc11.rename(columns={'f11':'nfolio'})
 # Variables 
 dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
 index_name = 'indice_bc11'
-cost_column = 'total_costo_promedio'
-status_column = 'status_nuevo'
+cost_column = 'costo_total'
+status_column = 'status_final'
 qty_column = 'qproducto'
 upc_column = 'prd_upc'
-fcols = ['f3nuevo','f4_nuevo','f5','nfolio','f12']
+fcols = ['f3','f4','f5','nfolio','f12']
 
 # TODO ---- revisar desde aquí 
  
@@ -44,6 +45,7 @@ f4['cantidad'] = f4['cantidad'].fillna('N/A')
 f4.loc[~f4.cantidad.str.isdigit(),'cantidad'] = np.nan 
 f4 = ct.convertir_a_numero(f4, ['cantidad']) # Convertir columnas de precio a dato numérico
 f5 = ct.convertir_a_numero(f5, ['cant_recibida','cant_pickeada'])
+
 # TODO Fin primera etapa 
 
 kpi['fecha_paletiza'] = pd.to_datetime(kpi['fecha_paletiza'])
@@ -73,7 +75,7 @@ for f in fcols:
     aux = bc11[bc11[f].notna()]
     indaux = aux[~aux[f].str.isdigit()][index_name].values
     bc11.loc[indaux, f] = np.nan
-
+ 
 # TODO ---- revisar hasta aquí 
 
 # Inicio de análisis de cierres 
@@ -93,45 +95,15 @@ for status_nuevo_f3 in lista_f3_2021:
     cierres.f3_verify(f3, status_nuevo_f3, '2021')
 
 cierres.f5_verify(f5, 'producto en tienda', '2021')
-cierres.kpi_verify(kpi, 'cierre x producto guardado despues de inventario', '2021', 'Recibido con fecha anterior al 21/01/2021')
-cierres.kpi_verify(kpi, 'cierre x producto guardado antes de inventario', '2020', 'Recibido con fecha posterior al 20/01/2021')
+cierres.kpi_verify(kpi, 'cierre x producto guardado despues de inventario', '2021', 'Recibido antes del 21/Enero/2021')
+cierres.kpi_verify(kpi, 'cierre x producto guardado antes de inventario', '2020', 'Recibido después del 20/Enero/2021')
 cierres.refact_verify(refact, 'cierre x recupero con cliente - refacturacion - base fal.com')
 
-# Tareas finales
+# Tareas finales 
 cierres.finals()
 bc11 = cierres.ica.get_db()
 
-# 30 de junio de 2021 
-# Comparar duplicados con los de michael 
-
-concept1 = 'cierre x duplicidad (f11 con mismo f12+sku+cantidad)'
-concept2 = 'registro duplicado en base de datos'
-sin_cat_dup = bc11[(bc11['status_nuevo']!= concept1)&(bc11['status_nuevo']!=concept2)]
-
-cat_dup = bc11[((bc11['status_nuevo']== concept1)|(bc11['status_nuevo']==concept2))]
-
-dup_cols = ['f12', 'prd_upc']
-cat_dup_mas_gco = cat_dup[cat_dup['gco_dup']=='y'] # Duplicados para MC y GCO
-redcols = dup_cols
-redcols.append('status_nuevo')
-redcols.append(index_name)
-cat_dup_mas_gco = cat_dup_mas_gco[redcols]
-cat_dup_mas_gco.drop_duplicates(dup_cols, inplace=True)
-
-bc11.loc[cat_dup_mas_gco['indice_bc11'].values, 'dupmc'] = 'y'
-
-mdup = pd.merge(sin_cat_dup, cat_dup_mas_gco, on=dup_cols,validate='many_to_one') # Registros unicos MC de duplicados
-bc11.loc[mdup['indice_bc11'].values, 'dupmc'] = 'y'
-
-aux = mdup[mdup.duplicated(dup_cols)]
-bc11.loc[aux['indice_bc11'].values, 'dupmc'] = np.nan
-bc11.loc[aux['indice_bc11'].values,'error_ru'] = 'y'
-
-bc11.loc[(bc11['dupmc'].isna())& (bc11['gco_dup'] =='y') ,'gco_dupall'] = 'y'
-bc11.loc[(bc11['dupmc'].isna())& (bc11['gco_dup'] =='y') & (bc11.GCO =='OKK'),'Comentario GCO'] = 'Coincidencia exacta + Registro duplicado en DB'
-
 print(bc11.groupby('gco_dup')[cost_column].sum())
-print(bc11.groupby('gco_dupall')[cost_column].sum())
 
 res = bc11.groupby([status_column,'GCO']).agg({cost_column:['sum', 'size']}).sort_values(by=[status_column,(cost_column,'sum')], ascending=False)
 print(res)# Presenta todos los estados 
@@ -143,7 +115,7 @@ def guardar():
     bdcia3 = bdcia2.merge(f5, how='left', left_on=[fcols[2],'prd_upc'], right_on=['transfer','upc'], validate='many_to_one')
     bdcia4 = bdcia3.merge(kpi, how='left',left_on=[fcols[3]], right_on=['entrada'],validate='many_to_one')
     bdcia5 = bdcia4.merge(kpi, how='left',left_on=[fcols[4]], right_on=['entrada'],validate='many_to_one')
-    #bdcia6 = bdcia4.merge(refact, how='left',left_on=[fcols[4]], right_on=['f12cod'],validate='many_to_one')
+    #bdcia5 = bdcia4.merge(refact, how='left',left_on=[fcols[4]], right_on=['f12cod'],validate='many_to_one')
     bdcia5.to_csv(f'output/{dt_string}-novedades-cierref11-all.csv', sep=';', index=False) 
  
 #guardar()

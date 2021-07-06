@@ -12,16 +12,24 @@ class InternalControlAnalysis:
         self.db = db.copy()
         self.index_column = indexcol
         self.dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
-    
-    def set_fcols(self, cols):
-        self.fcols = cols
 
     def get_db(self):
         return self.db
     
     def update_db(self, rwos, cols, value):
         self.db.loc[rwos, cols] = value
-     
+    
+    def get_okk_dup(self, rwos, cols, llave):
+        aux = self.db.loc[rwos]
+        aux = aux.loc[(aux['GCO']=='OKK')&(aux['gco_dup']=='y')]
+        self.db.loc[aux[self.index_column].values, cols] = f'Coincidencia {llave} + Registro duplicado en DB'
+
+    def get_dup_i(self, rwos, llave):
+        # Actualizar datos de OKK sin validar duplicados 
+        aux = self.db.loc[rwos]
+        aux = aux.loc[(self.db['GCO']=='OKK') & (self.db['fnandup']=='y')]
+        self.db.loc[aux[self.index_column], 'Comentario GCO'] = f'Coincidencia {llave} - Se requiere F12|UPC|QTY para validar duplicidad'
+
     def get_duplicates(self, bdquery, cols, llave):
         """
         Get duplicates
@@ -29,13 +37,32 @@ class InternalControlAnalysis:
         :param cols: (list) columns to identify duplicates
         :param numf: (string)
         """
-        du = bdquery[bdquery.duplicated(cols, keep=False)]
+        fnandup = bdquery[(bdquery.duplicated(cols, keep=False))&(bdquery[cols].isna().any(axis=1))]
+        ifnd = fnandup[self.index_column].values
+        self.db.loc[ifnd, 'fnandup'] = 'y'
+        du = bdquery[(bdquery.duplicated(cols, keep=False))& (bdquery[cols].notna().all(axis=1))]
         idu = du[self.index_column].values
         self.db.loc[idu, 'GCO'] = 'DUP'
         self.db.loc[idu, 'Comentario GCO'] = f'Registro duplicado {llave}'
         bdquery_res = bdquery[~bdquery.duplicated(cols, keep=False)]
-        return bdquery_res
+        return pd.concat([bdquery_res,fnandup], axis=0)
 
+    def get_dup_all_db(self,cols):
+        # Verificar duplicidad en toda la base 
+        self.db.loc[(self.db.duplicated(cols, keep=False)) &(self.db[cols].notna().all(axis=1)), 'gco_dup'] = 'y'
+        self.db.loc[(self.db.duplicated(cols, keep=False)) &(self.db[cols].isna()).any(axis=1), 'gco_dup'] = 'i'
+        self.db.loc[self.db['gco_dup'].isna(), 'gco_dup'] = 'n'
+
+    def get_checked(self):
+        # verificar registros revisados
+        self.db.loc[self.db['GCO'].notna(), 'checked'] = 'y'
+        self.db.loc[self.db['GCO'].isna(), 'checked'] = 'n'
+
+    def get_ru_dup_mc(self):
+        pass
+
+    def get_dupmc(self, indexes):
+        pass
 
     def get_fnan(self, bdquery, col, numf):
         """
@@ -48,7 +75,7 @@ class InternalControlAnalysis:
         #fnan.to_csv(f'output/{self.dt_string}-fnan.csv', sep=';', decimal=',', index=False) 
         inf5 = fnan[self.index_column].values
         self.db.loc[inf5, 'GCO'] = 'N' + numf
-        self.db.loc[inf5, 'Comentario GCO'] = f'Registro sin número de {numf}'
+        self.db.loc[inf5, 'Comentario GCO'] = f'Registro sin nro. de {numf}'
         bdquery_res = bdquery[bdquery[col].notna()]
         return bdquery_res
     
@@ -63,7 +90,7 @@ class InternalControlAnalysis:
         #fnan.to_csv(f'output/{self.dt_string}-fnan.csv', sep=';', decimal=',', index=False) 
         inf5 = fnan[self.index_column].values
         self.db.loc[inf5, 'GCO'] = 'N' + numf
-        self.db.loc[inf5, 'Comentario GCO'] = 'No existe número de ' + numf
+        self.db.loc[inf5, 'Comentario GCO'] = 'Registro sin nro. de ' + numf
         bdquery_res = bdquery[bdquery[cols].notna().any(1)]
         return bdquery_res
 
@@ -115,7 +142,22 @@ class InternalControlAnalysis:
         bdquery_res = bdquery[~bdquery[fl].isin(fs)]
         return bdquery_res
 
-
+    def get_diffqty_pro_f5(self, bdquery, qty1col, qty2col, fl, ff, comment):
+        """ 
+        Get rows with different quantity
+        :param bdquery: dataframe to identify different quantity
+        :param qty1col: (string) quantity 1 
+        :param qty2col: (string) quantity 2 
+        """
+        s = bdquery[[fl, ff,qty1col, qty2col, 'cant_pickeada']].groupby([fl, ff]).sum().reset_index()
+        fs = list(s[(s[qty1col]!= s[qty2col]) & (s[qty1col]!= s['cant_pickeada'])][fl].values)
+        dc = bdquery[bdquery[fl].isin(fs)] # Registros con cantidades diferentes
+        idc = dc[self.index_column].values
+        self.db.loc[idc, 'GCO' ] = 'NCC'
+        self.db.loc[idc, 'Comentario GCO' ] = comment
+        bdquery_res = bdquery[~bdquery[fl].isin(fs)]
+        return bdquery_res
+        
     def get_canceledstatus(self, bdquery, statuscol):
         """ 
         Get rows with different quantity
@@ -171,36 +213,34 @@ class InternalControlAnalysis:
         bdquery_res = bdquery[bdquery[valuecol]!=value]
         return bdquery_res
 
-    def get_menorvalue(self, bdquery, valuecol, value, note, comment):
+    def get_gvalue(self, bdquery, valuecol, value, note, comment):
         """ 
         Get rows with different value 
         :param bdquery: dataframe to query
         :param valuecol: (string) value column 
         :param value: (string) value of comparison 
         """
-        equalvalue = bdquery[bdquery[valuecol]>value]
+        equalvalue = bdquery[bdquery[valuecol]>=value]
         imvalue = equalvalue[self.index_column].values
         self.db.loc[imvalue, 'GCO'] = note
         self.db.loc[imvalue, 'Comentario GCO'] = comment
-        bdquery_res = bdquery[bdquery[valuecol]<=value]
-        return bdquery_res
-        
-    def get_diffqty_pro_f5(self, bdquery, qty1col, qty2col, fl, ff, comment):
-        """ 
-        Get rows with different quantity
-        :param bdquery: dataframe to identify different quantity
-        :param qty1col: (string) quantity 1 
-        :param qty2col: (string) quantity 2 
-        """
-        s = bdquery[[fl, ff,qty1col, qty2col, 'cant_pickeada']].groupby([fl, ff]).sum().reset_index()
-        fs = list(s[(s[qty1col]!= s[qty2col]) & (s[qty1col]!= s['cant_pickeada'])][fl].values)
-        dc = bdquery[bdquery[fl].isin(fs)] # Registros con cantidades diferentes
-        idc = dc[self.index_column].values
-        self.db.loc[idc, 'GCO' ] = 'NCC'
-        self.db.loc[idc, 'Comentario GCO' ] = comment
-        bdquery_res = bdquery[~bdquery[fl].isin(fs)]
+        bdquery_res = bdquery[bdquery[valuecol]<value]
         return bdquery_res
     
+    def get_lvalue(self, bdquery, valuecol, value, note, comment):
+        """ 
+        Get rows with different value 
+        :param bdquery: dataframe to query
+        :param valuecol: (string) value column 
+        :param value: (string) value of comparison 
+        """
+        equalvalue = bdquery[bdquery[valuecol]<value]
+        imvalue = equalvalue[self.index_column].values
+        self.db.loc[imvalue, 'GCO'] = note
+        self.db.loc[imvalue, 'Comentario GCO'] = comment
+        bdquery_res = bdquery[bdquery[valuecol]>=value]
+        return bdquery_res
+
     def get_notinlist(self, bdquery, valuecol, lista, note, comment):
         notinlist3 = bdquery[~bdquery[valuecol].isin(lista)]
         inotinlist = notinlist3[self.index_column].values
