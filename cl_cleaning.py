@@ -43,20 +43,18 @@ class CleaningText:
         return res 
 
     def clean_fnum(col):
-        res = col.str.strip('.!?$ \n\t')
-        res = res.str.replace('.','', regex=False)
+        res = col.str.replace(r'([^0-9])', '', regex=True)
         # Si f = 0 => nan 
         res.loc[res=='0'] = np.nan
         # Si f no es dígito => nan 
-        res = res.fillna('N/A')
+        res = res.fillna('nan')
         res.loc[~res.str.isdigit()] = np.nan
         return res 
     
     def clean_num(col):
-        res = col.str.strip('.!?$ \n\t')
-        res = res.str.replace('.','', regex=False)
+        res = col.str.replace(r'([^0-9,])', '', regex=True) # Conservar la coma para temas de decimales en bd
         # Si f no es dígito => nan 
-        res = res.fillna('N/A')
+        res = res.fillna('nan')
         res.loc[~res.str.isdigit()] = np.nan
         return res 
     
