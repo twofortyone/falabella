@@ -32,14 +32,10 @@ for name in names:
 
 f3, f4, f5, kpi, refact, nc = data[0],data[1],data[2],data[3],data[4],data[5]
 
-nc.drop(nc.columns[77:108], axis=1, inplace=True)
 
 f5 = ct.convertir_a_numero(f5, ['cant_recibida', 'cant_pickeada'])
 f4 = ct.convertir_a_numero(f4, ['cantidad'])
 nc = ct.convertir_a_numero(nc, [cost_column,'cantidad_trx_actual'])
-
-nc = ct.limpiar_cols(nc, [status_column, 'esmc'])
-#nc[status_column] = nc[status_column].apply(unidecode)
 
 #TODO cambiar fechas de texto a date 
 colsf5 = ['fe_reserva', 'fe_envo', 'fe_recep']
@@ -50,8 +46,8 @@ f4['aa creacion'] = f4['fecha_creacion'].str.split('-').str[2]
 
 nc.reset_index(inplace=True)
 nc.rename(columns={'index': index_name}, inplace=True)
+
 cerrado = nc[nc['esmc']=='cerrado']
-#cerrado.loc[:,status_column] = cerrado.loc[:,status_column].apply(unidecode)
 
 cierres_nc = CierresNC(nc, index_name)
 cierres_nc.set_fcols(fcols, [status_column, upc_column, cost_column, qty_column])

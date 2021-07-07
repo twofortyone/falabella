@@ -29,12 +29,11 @@ upc_column = 'prd_upc'
 fcols = ['f','f','f','nfolio','f']
 fcolaux = ['f', 'nfolio']
 
-# TODO ---- revisar desde aquí 
-#c11t_tienda_cols = ['nfolio','prd_upc', 'qproducto', 'total_costo_promedio', 'f', 'motivo']
+# Generar indice en columna
+c11t.reset_index(inplace=True)
+c11t.rename(columns={'index': index_name}, inplace=True)
 
-c11t = ct.limpiar_cols(c11t, fcols)
-c11t = ct.limpiar_cols(c11t, [status_column])
-f4 = ct.limpiar_cols(f4, ['nro_red_inventario','upc', 'cantidad'])
+# TODO ---- revisar desde aquí 
 
 #c11t.prd_upc= c11t.prd_upc.str.split('.').str[0] # Limpiar la columna de upc 
 
@@ -55,12 +54,6 @@ newcolsf3 = ['aaaa reserva', 'aaaa envio', 'aaaa anulacion','aaaa confirmacion']
 f3[newcolsf3] = f3[colsf3].apply(lambda x: x.str.extract('(\d{4})', expand=False))
 
 f4['aa creacion'] = f4['fecha_creacion'].str.split('-').str[2]
-
-# Generar indice en columna
-c11t.reset_index(inplace=True)
-c11t.rename(columns={'index': index_name}, inplace=True)
-c11t[status_column] = c11t[status_column].fillna('N/A')
-c11t[status_column] = c11t[status_column].apply(unidecode)
 # TODO ---- revisar hasta aquí 
 
 # Inicio de análisis de cierres 

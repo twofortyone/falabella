@@ -69,6 +69,18 @@ cnc_num = [ 'ct', 'cantidad_trx_actual']
 lista_fnum= [f3_fnum, f4_fnum, f5_fnum, kpi_fnum, refact_fnum]
 lista_num= [f3_num, f4_num, f5_num,'kpi', 'refac']
 
+# Texto 
+f3_text = ['linea', 'descripcion6']
+f4_text = ['estado','destino', 'linea']
+f5_text = ['estado', 'tipo_de_f5', 'motivo_discrepancia']
+kpi_text = ['tip0_trabajo']
+refact_text = ['medio_pago','confirmacion_facturacion', 'confirmacion_tesoreria']
+cf11_20_text = ['xobservacion','estado_actual', 'status_nuevo']
+cf11_21_text = ['xobservacion','estado_actual', 'status_final']
+cf11_tienda_text = ['motivo']
+cnc_text = ['esmc', 'tipmc']
+lista_text = [f3_text, f4_text, f5_text, kpi_text, refact_text]
+
 # Data aggregation 
 if data_select=='1': # CF11s CD 2020 
     lista.append(cf11_20)
@@ -76,6 +88,7 @@ if data_select=='1': # CF11s CD 2020
     dfs_colsreq.append(cf11_20_colsreq)
     lista_fnum.append(cf11_20_fnum)
     lista_num.append(cf11_20_num)
+    lista_text.append(cf11_20_text)
 
 elif data_select=='2': # CF11s 2021 
     lista.append(cf11_21)
@@ -83,6 +96,7 @@ elif data_select=='2': # CF11s 2021
     dfs_colsreq.append(cf11_21_colsreq)
     lista_fnum.append(cf11_21_fnum)
     lista_num.append(cf11_21_num)
+    lista_text.append(cf11_21_text)
 
 elif data_select =='3': # CF11s Tienda 2020 
     lista.append(cf11_tienda)
@@ -90,6 +104,7 @@ elif data_select =='3': # CF11s Tienda 2020
     dfs_colsreq.append(cf11_tienda_colsreq)
     lista_fnum.append(cf11_tienda_fnum)
     lista_num.append(cf11_tienda_num)
+    lista_text.append(cf11_tienda_text)
 
 elif data_select == '4': # Cierres NCs 
     lista.append(cierres_nc)
@@ -97,11 +112,17 @@ elif data_select == '4': # Cierres NCs
     dfs_colsreq.append(cnc_colsreq)
     lista_fnum.append(cnc_fnum)
     lista_num.append(cnc_num)
+    lista_text.append(cnc_text)
 
-print('Normalizando encabezados')
 # Normailzar headers
+print('Normalizando encabezados')
 for item in tqdm(lista): 
     ct.norm_header(item)
+
+# Limpiar texto
+print('Limpiando texto en columnas')
+for i, item in enumerate(tqdm(lista_text)):
+    lista[i].loc[:, item] = lista[i].loc[:, item].apply(ct.clean_str)
 
 # Eliminar columnas no requeridas
 def drop_except(df, cols):

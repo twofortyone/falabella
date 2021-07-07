@@ -15,7 +15,7 @@ data = []
 names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_cd_20']
 
 for name in names:
-    data.append(pd.read_csv(f'input/cierres_f11s/210630/210630-095612-{name}.csv', sep=';', dtype='object'))
+    data.append(pd.read_csv(f'input/cierres_f11s/prueba/210706-175332-{name}.csv', sep=';', dtype='object'))
 
 f3, f4, f5, kpi, refact, cf11 = data[0],data[1],data[2],data[3],data[4],data[5]
 
@@ -28,8 +28,12 @@ qty_column = 'qproducto'
 upc_column = 'prd_upc'
 fcols = ['f3nuevo','f4_nuevo','f5','nfolio','f12']
 
+# Generar indice en columna
+cf11.reset_index(inplace=True)
+cf11.rename(columns={'index': index_name}, inplace=True)
+
 # TODO ---- revisar desde aquí 
-cf11 = ct.limpiar_cols(cf11, [status_column])
+cf11.loc[:,['qproducto','total_costo_promedio']] = cf11[['qproducto','total_costo_promedio']].apply(pd.to_numeric)
 
 cf11.prd_upc= cf11.prd_upc.str.split('.').str[0] # Limpiar la columna de upc 
 
@@ -48,12 +52,6 @@ newcolsf3 = ['aaaa reserva', 'aaaa envio', 'aaaa anulacion','aaaa confirmacion']
 f3[newcolsf3] = f3[colsf3].apply(lambda x: x.str.extract('(\d{4})', expand=False))
 
 f4['aa creacion'] = f4['fecha_creacion'].str.split('-').str[2]
-
-# Generar indice en columna
-cf11.reset_index(inplace=True)
-cf11.rename(columns={'index': index_name}, inplace=True)
-cf11[status_column] = cf11[status_column].fillna('N/A')
-cf11[status_column] = cf11[status_column].apply(unidecode)
 
 # TODO ---- revisar hasta aquí 
 

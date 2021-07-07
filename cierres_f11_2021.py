@@ -29,8 +29,11 @@ qty_column = 'qproducto'
 upc_column = 'prd_upc'
 fcols = ['f3','f4','f5','nfolio','f12']
 
+# Generar indice en columna
+cf11.reset_index(inplace=True)
+cf11.rename(columns={'index': index_name}, inplace=True)
+
 # TODO ---- revisar desde aquí 
-cf11 = ct.limpiar_cols(cf11, [status_column])
 cf11.prd_upc= cf11.prd_upc.str.split('.').str[0] # Limpiar la columna de upc 
 
 # TODO Fin primera etapa 
@@ -48,12 +51,6 @@ newcolsf3 = ['aaaa reserva', 'aaaa envio', 'aaaa anulacion','aaaa confirmacion']
 f3[newcolsf3] = f3[colsf3].apply(lambda x: x.str.extract('(\d{4})', expand=False))
 
 f4['aa creacion'] = f4['fecha_creacion'].str.split('-').str[2]
-
-# Generar indice en columna
-cf11.reset_index(inplace=True)
-cf11.rename(columns={'index': index_name}, inplace=True)
-cf11[status_column] = cf11[status_column].fillna('N/A')
-cf11[status_column] = cf11[status_column].apply(unidecode) 
 # TODO ---- revisar hasta aquí 
 
 # Inicio de análisis de cierres 

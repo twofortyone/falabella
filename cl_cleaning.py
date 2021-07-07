@@ -14,7 +14,6 @@ class CleaningText:
         bd.rename(columns=lambda col: col.replace('.', '').replace(' ', '_'), inplace = True)
         return bd
 
-
     def col_duplicados(bd, col):
         cols = []
         n = 1
@@ -25,21 +24,6 @@ class CleaningText:
                 continue
             cols.append(col)
         bd.columns = cols
-        return bd
-
-    def convertir_a_numero(bd, cols):
-        bd.loc[:,cols].fillna('N/A', inplace=True)
-        bd.loc[:,cols] = bd.loc[:,cols].apply(lambda x: x.str.strip('-.!?$ \n\t').str.replace(
-            '.', '', regex=False).str.replace(',', '.', regex=False).str.strip() )
-        #print(bd.loc[0,cols])
-        bd.loc[:,cols] = bd.loc[:,cols].apply(pd.to_numeric)
-        bd.loc[:,cols].fillna(0)
-        return bd
-        
-    def limpiar_cols(bd, cols):
-        #bd.loc[:,cols].fillna('N/A', inplace=True)
-        bd.loc[:,cols] = bd.loc[:,cols].apply(lambda x: x.str.strip('.!?$ \n\t').str.lower())
-        #bd.loc[:,cols].fillna('N/A', inplace=True)
         return bd
 
     def strip_symbols(col):
@@ -74,4 +58,11 @@ class CleaningText:
         # Si f no es dígito => nan 
         res = res.fillna('N/A')
         res.loc[~res.str.isdigit()] = np.nan
+        return res 
+    
+    def clean_str(col):
+        res = col.fillna('nan')
+        res = res.apply(unidecode)
+        res = res.str.replace(r'([^a-zA-Z0-9 ])', '', regex=True)
+        res = res.str.lower()
         return res 
