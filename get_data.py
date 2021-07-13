@@ -19,15 +19,15 @@ print('4. Cierres de NCs')
 data_select = input('Seleccione una opción (1-4):')
 
 # Cargar data
-f3 = pd.read_csv(f'input/init_data/210630-095019-f3-output.csv', sep=';', dtype='object')
-f4 = pd.read_csv(f'input/init_data/210630-094816-f4-output.csv', sep=';', dtype='object')
-f5 = pd.read_csv(f'input/init_data/210625-101509-f5-output.csv', sep=';', dtype='object')
-kpi = pd.read_csv(f'input/init_data/210630-095136-kpi.csv', sep=';', dtype='object')
+f3 = pd.read_csv(f'input/init_data/210713-111810-f3-output.csv', sep=';', dtype='object')
+f4 = pd.read_csv(f'input/init_data/210713-111810-f4-output.csv', sep=';', dtype='object')
+f5 = pd.read_csv(f'input/init_data/210713-111810-f5-output.csv', sep=';', dtype='object')
+kpi = pd.read_csv(f'input/init_data/210713-111810-kpi.csv', sep=';', dtype='object')
 refact = pd.read_csv(f'input/init_data/210616-refact.csv', sep=';', dtype='object')
-cf11_20= pd.read_csv(f'input/init_data/210630_cierres_20.csv', sep=';',dtype='object')
+cf11_20= pd.read_csv(f'input/init_data/210712_cierres_f11_20.csv', sep=';',dtype='object')
 cf11_21 = pd.read_csv(f'input/init_data/210629_cierre_21.csv', sep=';',dtype='object')
-cf11_tienda = pd.read_csv(f'input/init_data/210623_cf11_tienda.csv', sep=';',dtype='object')
-cierres_nc = pd.read_csv(f'input/init_data/210625_nc.csv', sep=';',dtype='object')
+cf11_tienda = pd.read_csv(f'input/init_data/210713-081523-cf11_tienda_20.csv', sep=';',dtype='object')
+cierres_nc = pd.read_csv(f'input/init_data/210709-151757-nc.csv', sep=';',dtype='object')
 
 # Declaración de columnas requeridas 
 f3_colsreq = ['nro_devolucion', 'fecha_reserva', 'fecha_envio', 'fecha_anulacion', 'fecha_confirmacion', 'upc', 'sku', 'linea', 'descripcion6', 'cantidad', 'folio_f11', 'folio_f12']
@@ -37,7 +37,7 @@ kpi_colsreq = ['index', 'tip0_trabajo', 'entrada','fecha_paletiza', 'aaaa_paleti
 refac_colsreq = ['medio_pago','cod#aut', '4_ult', 'f12cod', 'orden_de_compra','cedula', 'valor_boleta','fecha_devolucion', 'confirmacion_facturacion', 'confirmacion_tesoreria']
 cf11_20_colsreq  = ['nfolio','f12', 'prd_upc', 'qproducto', 'xobservacion', 'total_costo_promedio', 'estado_actual', 'status_nuevo', 'f3nuevo', 'f4_nuevo', 'nuevo_f11', 'f5'] # Para cd 2020 
 cf11_21_colsreq  = ['f11','f12', 'prd_upc', 'qproducto', 'xobservacion', 'costo_total', 'estado_actual', 'status_final', 'f3', 'f4', 'f5'] # Para cd 2021 
-cf11_tienda_colsreq = ['nfolio','prd_upc', 'qproducto', 'total_costo_promedio', 'f', 'motivo']
+cf11_tienda_colsreq = ['nfolio','upc', 'estado', 'producto', 'qproducto', 'total_costo_promedio', 'f', 'f3', 'f4', 'motivo']
 cnc_colsreq = ['cod_aut_nc', 'local_trx', 'terminal', 'local_ant', 'upc', 'ct', 'cantidad_trx_actual', 'tipo_nc', 'f3', 'f4','f5', 'f11', 'esmc', 'tipmc']
 
 # Inicializar estructuras según tipo análisis
@@ -54,7 +54,7 @@ kpi_fnum = ['entrada']
 refact_fnum = ['cod#aut', '4_ult', 'f12cod', 'orden_de_compra','cedula']
 cf11_20_fnum = ['nfolio','f12', 'prd_upc', 'f3nuevo', 'f4_nuevo', 'nuevo_f11', 'f5']
 cf11_21_fnum = ['f11','f12', 'prd_upc', 'f3', 'f4', 'f5']
-cf11_tienda_fnum = ['nfolio', 'prd_upc', 'f']
+cf11_tienda_fnum = ['nfolio', 'upc', 'f', 'f3', 'f4']
 cnc_fnum = ['cod_aut_nc','local_trx', 'terminal', 'local_ant', 'upc', 'f3', 'f4', 'f5', 'f11']
 
 # Costos y cantidades 
@@ -77,7 +77,7 @@ kpi_text = ['tip0_trabajo']
 refact_text = ['medio_pago','confirmacion_facturacion', 'confirmacion_tesoreria']
 cf11_20_text = ['xobservacion','estado_actual', 'status_nuevo']
 cf11_21_text = ['xobservacion','estado', 'status_final']
-cf11_tienda_text = ['motivo']
+cf11_tienda_text = ['motivo', 'estado']
 cnc_text = ['esmc', 'tipmc']
 lista_text = [f3_text, f4_text, f5_text, kpi_text, refact_text]
 
@@ -113,6 +113,9 @@ elif data_select == '4': # Cierres NCs
     lista_fnum.append(cnc_fnum)
     lista_num.append(cnc_num)
     lista_text.append(cnc_text)
+
+else: 
+    print('Seleccione una opción correcta (1-4)')
 
 # Normailzar headers
 print('Normalizando encabezados')

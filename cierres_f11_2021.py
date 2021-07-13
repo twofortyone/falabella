@@ -3,7 +3,6 @@ import pandas as pd
 from datetime import datetime
 from cl_cleaning import CleaningText as ct 
 from ica_cierres import CierresF11
-from report import Report 
 from unidecode import unidecode
 import numpy as np 
 
@@ -15,7 +14,7 @@ data = []
 names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_cd_21']
 
 for name in names:
-    data.append(pd.read_csv(f'input/cierres_f11s/210629_2021/210629-143015-{name}.csv', sep=';', dtype='object'))
+    data.append(pd.read_csv(f'input/cierres_f11s/prueba/210707-092233-{name}.csv', sep=';', dtype='object'))
 
 f3, f4, f5, kpi, refact, cf11 = data[0],data[1],data[2],data[3],data[4],data[5]
 
@@ -33,8 +32,16 @@ fcols = ['f3','f4','f5','nfolio','f12']
 cf11.reset_index(inplace=True)
 cf11.rename(columns={'index': index_name}, inplace=True)
 
+# Convertir columnas a número 
+f3.loc[:,'cantidad'] = pd.to_numeric(f3.loc[:,'cantidad'])
+f4.loc[:,'cantidad'] = pd.to_numeric(f4.loc[:,'cantidad'])
+f5.loc[:,'cant_pickeada'] = pd.to_numeric(f5.loc[:,'cant_pickeada'])
+f5.loc[:,'cant_recibida'] = pd.to_numeric(f5.loc[:,'cant_recibida'])
+#f5.loc[:,['cant_pickeada', 'cant_recibida']] = f5.loc[:,['cant_pickeada', 'cant_recibida']].apply(pd.to_numeric)
+cf11.loc[:,['qproducto','costo_total']] = cf11.loc[:,['qproducto','costo_total']].apply(pd.to_numeric)
+
 # TODO ---- revisar desde aquí 
-cf11.prd_upc= cf11.prd_upc.str.split('.').str[0] # Limpiar la columna de upc 
+#cf11.prd_upc= cf11.prd_upc.str.split('.').str[0] # Limpiar la columna de upc 
 
 # TODO Fin primera etapa 
 kpi['fecha_paletiza'] = pd.to_datetime(kpi['fecha_paletiza'])
@@ -84,13 +91,20 @@ res = cf11.groupby([status_column,'GCO']).agg({cost_column:['sum', 'size']}).sor
 print(res)# Presenta todos los estados 
 
 def guardar():
-    cf11.to_csv(f'output/{dt_string}-novedades-cierref11.csv', sep=';', index=False, encoding='utf-8') # Guarda el archivo 
+    cf11.to_excel(f'output/{dt_string}_cf11_cd_21.xlsx', sheet_name=f'{dt_string}_cf11_cd_21', index=False, encoding='utf-8') # Guarda el archivo 
     bdcia = cf11.merge(f3, how='left', left_on=[fcols[0],'prd_upc'], right_on=['nro_devolucion','upc'], validate='many_to_one')
     bdcia2 = bdcia.merge(f4, how='left',  left_on=[fcols[1],'prd_upc'], right_on=['nro_red_inventario','upc'],validate='many_to_one')
     bdcia3 = bdcia2.merge(f5, how='left', left_on=[fcols[2],'prd_upc'], right_on=['transfer','upc'], validate='many_to_one')
     bdcia4 = bdcia3.merge(kpi, how='left',left_on=[fcols[3]], right_on=['entrada'],validate='many_to_one')
     bdcia5 = bdcia4.merge(kpi, how='left',left_on=[fcols[4]], right_on=['entrada'],validate='many_to_one')
     #bdcia5 = bdcia4.merge(refact, how='left',left_on=[fcols[4]], right_on=['f12cod'],validate='many_to_one')
-    bdcia5.to_csv(f'output/{dt_string}-novedades-cierref11-all.csv', sep=';', index=False) 
+    bdcia5.to_excel(f'output/{dt_string}_cf11_cd_21_all.xlsx', sheet_name=f'{dt_string}_cf11_cd_21', index=False) 
  
-#guardar()
+print('Desea guardar los resultados? (y/n)')
+save_res = input('//:')
+
+if save_res=='y':
+    guardar()
+    print(f'Guardado como: {dt_string}-novedades-cf11s_cd_20.xlsx')
+else:
+    print('Ok')

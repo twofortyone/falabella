@@ -1,21 +1,17 @@
 # Librerías
 import pandas as pd
 from datetime import datetime
-from cl_cleaning import CleaningText as ct 
 from ica_cierres_tienda import CierresF11
-from report import Report 
-from unidecode import unidecode
-import numpy as np 
 
 # Configuraciones
 pd.set_option('float_format', '{:,.2f}'.format)
 
 # Cargar data
 data = []
-names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_tienda']
+names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_tienda_20']
 
 for name in names:
-    data.append(pd.read_csv(f'input/cierres_f11s/210623_tienda/210623-123027-{name}.csv', sep=';', dtype='object'))
+    data.append(pd.read_csv(f'input/cierres_f11s/210713_tienda/210713-121035-{name}.csv', sep=';', dtype='object'))
 
 f3, f4, f5, kpi, refact, c11t = data[0],data[1],data[2],data[3],data[4],data[5]
 
@@ -25,13 +21,22 @@ index_name = 'indice_c11t'
 cost_column = 'total_costo_promedio'
 status_column = 'motivo'
 qty_column = 'qproducto'
-upc_column = 'prd_upc'
-fcols = ['f','f','f','nfolio','f']
+upc_column = 'upc'
+fcols = ['f3','f4','f','nfolio','f']
 fcolaux = ['f', 'nfolio']
 
 # Generar indice en columna
 c11t.reset_index(inplace=True)
 c11t.rename(columns={'index': index_name}, inplace=True)
+c11t.rename(columns={'estado': 'estado_f11'}, inplace=True)
+
+# Convertir columnas a número 
+f3.loc[:,'cantidad'] = pd.to_numeric(f3.loc[:,'cantidad'])
+f4.loc[:,'cantidad'] = pd.to_numeric(f4.loc[:,'cantidad'])
+f5.loc[:,'cant_pickeada'] = pd.to_numeric(f5.loc[:,'cant_pickeada'])
+f5.loc[:,'cant_recibida'] = pd.to_numeric(f5.loc[:,'cant_recibida'])
+#f5.loc[:,['cant_pickeada','cant_recibida']] =  f5[['cant_pickeada','cant_recibida']].apply(pd.to_numeric)
+c11t.loc[:,['qproducto','total_costo_promedio']] = c11t[['qproducto','total_costo_promedio']].apply(pd.to_numeric)
 
 # TODO ---- revisar desde aquí 
 
@@ -68,6 +73,8 @@ lista_f3_2021 = ['f3']
 for status_nuevo_f3 in lista_f3_2021:
     cierres.f3_verify(f3, status_nuevo_f3, '2021')
 
+#cierres.f5_verify(f5, 'f5', '2021')
+
 # Tareas finales 
 cierres.finals()
 c11t = cierres.ica.get_db()
@@ -76,7 +83,7 @@ res = c11t.groupby([status_column,'GCO']).agg({cost_column:['sum', 'size']}).sor
 print(res)# Presenta todos los estados 
 
 def guardar():
-    c11t.to_csv(f'output/{dt_string}-cf11_tienda.csv', sep=';', index=False) # Guarda el archivo 
+    c11t.to_excel(f'output/{dt_string}-cf11_tienda.xlsx', sheet_name=f'{dt_string}-cf11_tienda', index=False) # Guarda el archivo 
     # bdcia = c11t.merge(f3, how='left', left_on=[fcols[0],'prd_upc'], right_on=['nro_devolucion','upc'], validate='many_to_one')
     # bdcia2 = bdcia.merge(f4, how='left',  left_on=[fcols[1],'prd_upc'], right_on=['nro_red_inventario','upc'],validate='many_to_one')
     # bdcia3 = bdcia2.merge(f5, how='left', left_on=[fcols[2],'prd_upc'], right_on=['transfer','upc'], validate='many_to_one')
@@ -84,4 +91,11 @@ def guardar():
     # bdcia5 = bdcia4.merge(refact, how='left',left_on=[fcols[4]], right_on=['f12cod'],validate='many_to_one')
     # bdcia4.to_csv(f'output/{dt_string}-novedades-cierref11-all.csv', sep=';', index=False) 
  
-guardar()
+print('Desea guardar los resultados? (y/n)')
+save_res = input('//:')
+
+if save_res=='y':
+    guardar()
+    print(f'Guardado como: {dt_string}-novedades-cf11s_cd_20.xlsx')
+else:
+    print('Ok')

@@ -55,12 +55,14 @@ class CleaningText:
         res = col.str.replace(r'([^0-9,])', '', regex=True) # Conservar la coma para temas de decimales en bd
         # Si f no es dígito => nan 
         res = res.fillna('nan')
+        res = res.apply(lambda x: x.split(',')[0]) # TODO temporal - cambiar por método númerico
         res.loc[~res.str.isdigit()] = np.nan
         return res 
     
     def clean_str(col):
         res = col.fillna('nan')
         res = res.apply(unidecode)
-        res = res.str.replace(r'([^a-zA-Z0-9 ])', '', regex=True)
+        res = res.str.replace(r'([^a-zA-Z0-9-+(). ])', '', regex=True)
+        res = res.str.strip()
         res = res.str.lower()
         return res 

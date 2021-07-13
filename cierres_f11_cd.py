@@ -3,7 +3,6 @@ import pandas as pd
 from datetime import datetime
 from cl_cleaning import CleaningText as ct 
 from ica_cierres import CierresF11
-from report import Report 
 from unidecode import unidecode
 import numpy as np 
 
@@ -15,7 +14,7 @@ data = []
 names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_cd_20']
 
 for name in names:
-    data.append(pd.read_csv(f'input/cierres_f11s/prueba/210706-175332-{name}.csv', sep=';', dtype='object'))
+    data.append(pd.read_csv(f'input/cierres_f11s/210712/210712-211321-{name}.csv', sep=';', dtype='object'))
 
 f3, f4, f5, kpi, refact, cf11 = data[0],data[1],data[2],data[3],data[4],data[5]
 
@@ -32,13 +31,18 @@ fcols = ['f3nuevo','f4_nuevo','f5','nfolio','f12']
 cf11.reset_index(inplace=True)
 cf11.rename(columns={'index': index_name}, inplace=True)
 
-# TODO ---- revisar desde aquí 
+# Convertir columnas a número 
+f3.loc[:,'cantidad'] = pd.to_numeric(f3.loc[:,'cantidad'])
+f4.loc[:,'cantidad'] = pd.to_numeric(f4.loc[:,'cantidad'])
+f5.loc[:,'cant_pickeada'] = pd.to_numeric(f5.loc[:,'cant_pickeada'])
+f5.loc[:,'cant_recibida'] = pd.to_numeric(f5.loc[:,'cant_recibida'])
+#f5.loc[:,['cant_pickeada','cant_recibida']] =  f5[['cant_pickeada','cant_recibida']].apply(pd.to_numeric)
 cf11.loc[:,['qproducto','total_costo_promedio']] = cf11[['qproducto','total_costo_promedio']].apply(pd.to_numeric)
 
-cf11.prd_upc= cf11.prd_upc.str.split('.').str[0] # Limpiar la columna de upc 
-
+# Convertir columnas a fecha 
 kpi['fecha_paletiza'] = pd.to_datetime(kpi['fecha_paletiza'])
 
+# TODO ---- revisar desde aquí 
 colsf5 = ['fe_reserva', 'fe_envo', 'fe_recep']
 newcolsf5 = ['aaaa reserva', 'aaaa envio', 'aaaa recep']
 f5[newcolsf5] = f5[colsf5].apply(lambda x: x.str.extract('(\d{4})', expand=False))
@@ -46,13 +50,12 @@ f5[newcolsf5] = f5[colsf5].apply(lambda x: x.str.extract('(\d{4})', expand=False
 # datecolsf4 = ['fecha creacion',  'fecha reserva', 'fecha envio']
 # newdatecolf4 = ['aa creacion',  'aa reserva', 'aa envio']
 # f4[newdatecolf4] = f4[datecolsf4].apply(lambda x: x.str.extract('(\d{2})', expand=False))
-# TODO Pasar esto a limpieza F4 y lo de borrar lineas de txt 
+# TODO Pasar esto a limpieza F4 
 colsf3 = ['fecha_reserva', 'fecha_envio', 'fecha_anulacion','fecha_confirmacion']
 newcolsf3 = ['aaaa reserva', 'aaaa envio', 'aaaa anulacion','aaaa confirmacion']
 f3[newcolsf3] = f3[colsf3].apply(lambda x: x.str.extract('(\d{4})', expand=False))
 
 f4['aa creacion'] = f4['fecha_creacion'].str.split('-').str[2]
-
 # TODO ---- revisar hasta aquí 
 
 # Inicio de análisis de cierres 
@@ -84,22 +87,26 @@ cf11 = cierres.ica.get_db()
 # Comparar duplicados con los de michael 
 # TODO  pasar a método 
 concept1 = 'cierre x duplicidad (f11 con mismo f12+sku+cantidad)'
-concept2 = 'registro duplicado en base de datos'
-sin_cat_dup = cf11[(cf11['status_nuevo']!= concept1)&(cf11['status_nuevo']!=concept2)]
+#concept2 = 'registro duplicado en base de datos'
+#sin_cat_dup = cf11[(cf11['status_nuevo']!= concept1)&(cf11['status_nuevo']!=concept2)]
+sin_cat_dup = cf11[cf11['status_nuevo']!= concept1] # No es categoría dup
 
-cat_dup = cf11[((cf11['status_nuevo']== concept1)|(cf11['status_nuevo']==concept2))]
+cat_dup = cf11[cf11['status_nuevo']== concept1] # Es categoría dup
+#cat_dup = cf11[((cf11['status_nuevo']== concept1)|(cf11['status_nuevo']==concept2))]
 
 dup_cols = ['f12', 'prd_upc']
 cat_dup_mas_gco = cat_dup[cat_dup['gco_dup']=='y'] # Duplicados para MC y GCO
-redcols = dup_cols
+redcols = ['f12', 'prd_upc']
 redcols.append('status_nuevo')
-redcols.append(index_name)
+#redcols.append(index_name)
 cat_dup_mas_gco = cat_dup_mas_gco[redcols]
+
 cat_dup_mas_gco.drop_duplicates(dup_cols, inplace=True)
 
-cf11.loc[cat_dup_mas_gco['indice_cf11'].values, 'dupmc'] = 'y'
+cf11.loc[cat_dup_mas_gco.index, 'dupmc'] = 'y'
 
 mdup = pd.merge(sin_cat_dup, cat_dup_mas_gco, on=dup_cols,validate='many_to_one') # Registros unicos MC de duplicados
+print(mdup.empty)
 cf11.loc[mdup['indice_cf11'].values, 'dupmc'] = 'y'
 
 aux = mdup[mdup.duplicated(dup_cols)]
@@ -116,13 +123,20 @@ res = cf11.groupby([status_column,'GCO']).agg({cost_column:['sum', 'size']}).sor
 print(res)# Presenta todos los estados 
 
 def guardar():
-    cf11.to_csv(f'output/{dt_string}-novedades-cierref11.csv', sep=';', index=False, encoding='utf-8') # Guarda el archivo 
+    cf11.to_excel(f'output/{dt_string}-novedades-cf11s_cd_20.xlsx', sheet_name=f'{dt_string}_cf11_cd_20', index=False, encoding='utf-8') # Guarda el archivo 
     bdcia = cf11.merge(f3, how='left', left_on=[fcols[0],'prd_upc'], right_on=['nro_devolucion','upc'], validate='many_to_one')
     bdcia2 = bdcia.merge(f4, how='left',  left_on=[fcols[1],'prd_upc'], right_on=['nro_red_inventario','upc'],validate='many_to_one')
     bdcia3 = bdcia2.merge(f5, how='left', left_on=[fcols[2],'prd_upc'], right_on=['transfer','upc'], validate='many_to_one')
     bdcia4 = bdcia3.merge(kpi, how='left',left_on=[fcols[3]], right_on=['entrada'],validate='many_to_one')
     bdcia5 = bdcia4.merge(kpi, how='left',left_on=[fcols[4]], right_on=['entrada'],validate='many_to_one')
     #bdcia6 = bdcia4.merge(refact, how='left',left_on=[fcols[4]], right_on=['f12cod'],validate='many_to_one')
-    bdcia5.to_csv(f'output/{dt_string}-novedades-cierref11-all.csv', sep=';', index=False) 
- 
-#guardar()
+    bdcia5.to_excel(f'output/{dt_string}-novedades-cf11s_cd_20-all.xlsx', sheet_name=f'{dt_string}_cf11_cd_20',index=False) 
+
+print('Desea guardar los resultados? (y/n)')
+save_res = input('//:')
+
+if save_res=='y':
+    guardar()
+    print(f'Guardado como: {dt_string}-novedades-cf11s_cd_20.xlsx')
+else:
+    print('Ok')

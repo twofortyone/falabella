@@ -25,56 +25,68 @@ fcols = ['f3','f4','f5','f11', '', 'cod_aut_nc']
 # --------------------------------------------------------------------------------------------
 # Cargar data
 data = []
-names = ['f3', 'f4', 'f5', 'kpi','refact', 'cierre_nc']
+names = ['f3', 'f4', 'f5', 'kpi','refact', 'cierres_nc']
 
 for name in names:
-    data.append(pd.read_csv(f'input/nc_3000/210625/210625-110311-{name}.csv', sep=';', dtype='object'))
+    data.append(pd.read_csv(f'input/nc_3000/210712/210713-112344-{name}.csv', sep=';', dtype='object'))
 
 f3, f4, f5, kpi, refact, nc = data[0],data[1],data[2],data[3],data[4],data[5]
 
+# Generar indice en columna
+nc.reset_index(inplace=True)
+nc.rename(columns={'index': index_name}, inplace=True)
 
-f5 = ct.convertir_a_numero(f5, ['cant_recibida', 'cant_pickeada'])
-f4 = ct.convertir_a_numero(f4, ['cantidad'])
-nc = ct.convertir_a_numero(nc, [cost_column,'cantidad_trx_actual'])
+""" # TODO ARREGLAR 
+nc.loc[status_column == 'compensaciin con ct verde', status_column] = 'compensacion con ct verde'
+nc.loc[status_column == 'compensaciin con tienda', status_column] = 'compensacion con tienda'
+nc.loc[status_column == 'compensaciin con preventas', status_column] = 'compensacion con preventas'
+nc.loc[(status_column == 'compensa con ro')|(status_column == 'compensa con ro asociado'), status_column] = 'con ro asociado'
+ """
+# Convertir columnas a número 
+f3.loc[:,'cantidad'] = pd.to_numeric(f3.loc[:,'cantidad'])
+f4.loc[:,'cantidad'] = pd.to_numeric(f4.loc[:,'cantidad'])
+f5.loc[:,'cant_pickeada'] = pd.to_numeric(f5.loc[:,'cant_pickeada'])
+f5.loc[:,'cant_recibida'] = pd.to_numeric(f5.loc[:,'cant_recibida'])
+#f5.loc[:,['cant_pickeada','cant_recibida']] =  f5[['cant_pickeada','cant_recibida']].apply(pd.to_numeric)
+nc.loc[:,['cantidad_trx_actual', cost_column]] = nc[['cantidad_trx_actual', cost_column]].apply(pd.to_numeric)
 
+# TODO ---- revisar desde aquí 
 #TODO cambiar fechas de texto a date 
 colsf5 = ['fe_reserva', 'fe_envo', 'fe_recep']
 newcolsf5 = ['aaaa reserva', 'aaaa envio', 'aaaa recep']
 f5[newcolsf5] = f5[colsf5].apply(lambda x: x.str.extract('(\d{4})', expand=False))
 
 f4['aa creacion'] = f4['fecha_creacion'].str.split('-').str[2]
+# TODO ---- revisar hasta aquí 
 
-nc.reset_index(inplace=True)
-nc.rename(columns={'index': index_name}, inplace=True)
-
+# Inicio de análisis de cierres 
 cerrado = nc[nc['esmc']=='cerrado']
-
 cierres_nc = CierresNC(nc, index_name)
 cierres_nc.set_fcols(fcols, [status_column, upc_column, cost_column, qty_column])
 #TODO fix f12 number in f4_verify
 
-lista_tipmc_f5 = ['f5 en revisión', 'con mc asociada','compensación con ct verde','se asocia f11-conciliacion con transportadora',
-'con quiebre asociado','con f11 tipo cliente asociado','se asocia f3-devuelto a proveedor',
-'con ro asociado','compensa con local de venta/anulado x user', 'f12 en digitado sin salida']
+lista_tipmc_f5 = ['f5 en revision', 'con mc asociada','compensacion con ct verde','se asocia f11conciliacion con transportadora',
+'con quiebre asociado','con f11 tipo cliente asociado','se asocia f3 devuelto a proveedor',
+'con ro asociado','compensa con local de ventaanulado x user', 'f12 en digitado sin salida']
 
 print('Análisis F5s')
 for tipo in tqdm(lista_tipmc_f5):
     cierres_nc.f5_verify(f5, tipo, '2021', 'cod_aut_nc')
 
-lista_tipm_f4 = ['se asocia f4-baja de inventario-menaje', 'baja con cargo a linea por costos', 'se asocia f4-baja de inventario-menaje / en revisión f4']
+lista_tipm_f4 = ['se asocia f4baja de inventariomenaje', 'baja con cargo a linea por costos', 'se asocia f4-baja de inventario-menaje / en revisión f4']
 print('Análisis F4s')
 for tipo2 in tqdm(lista_tipm_f4):
     cierres_nc.f4_verify(f4, tipo2, '2021')
 
-cierres_nc.f5_verify_local(f5, 'compensación con dvd administrativo', '2021', 'cod_aut_nc', '3001')
+cierres_nc.f5_verify_local(f5, 'compensacion con dvd administrativo', '2021', 'cod_aut_nc', '3001')
 print('cts ------------------------------------------------------------')
-nil = cierres_nc.f5_verify_local_list(f5, 'compensación con ct ciudades', '2021', 'cod_aut_nc', 'CTs',cts)
+nil = cierres_nc.f5_verify_local_list(f5, 'compensacion con ct ciudades', '2021', 'cod_aut_nc', 'CTs',cts)
 print(nil)
 print('preventas ------------------------------------------------------------')
-nil = cierres_nc.f5_verify_local_list(f5,'compensación con preventas', '2021', 'cod_aut_nc', 'preventas',preventas)
+nil = cierres_nc.f5_verify_local_list(f5,'compensacion con preventas', '2021', 'cod_aut_nc', 'preventas',preventas)
 print(nil)
 print('tiendas ------------------------------------------------------------')
-nil = cierres_nc.f5_verify_local_list(f5,'compensación con tienda', '2021', 'cod_aut_nc', 'tiendas ',tiendas)
+nil = cierres_nc.f5_verify_local_list(f5,'compensacion con tienda', '2021', 'cod_aut_nc', 'tiendas ',tiendas)
 print(nil)
 
 nc = cierres_nc.get_db()
@@ -95,9 +107,16 @@ print(res)
 print(res[('ct', 'sum')].sum())
 
 def guardar():
-    nc.to_csv(f'output/{dt_string}-nc-output.csv', sep=';', index=False)
+    nc.to_excel(f'output/{dt_string}-nc-output.xlsx', sheet_name=f'{dt_string}_cnc', index=False)
     nc2 = nc.merge(f5, how='left', left_on=[fcols[2],upc_column], right_on=['transfer','upc'], validate='many_to_one')
     nc3 = nc2.merge(f4, how='left',  left_on=[fcols[1],upc_column], right_on=['nro_red_inventario','upc'],validate='many_to_one')
-    nc3.to_csv(f'output/{dt_string}-cierres-nc-all.csv', sep=';', index=False) 
+    nc3.to_excel(f'output/{dt_string}-cnc-all.xlsx', sheet_name=f'{dt_string}_cnc', index=False) 
 
-#guardar()
+print('Desea guardar los resultados? (y/n)')
+save_res = input('//:')
+
+if save_res=='y':
+    guardar()
+    print(f'Guardado como: {dt_string}-novedades-cf11s_cd_20.xlsx')
+else:
+    print('Ok')

@@ -32,7 +32,7 @@ class CierresNC:
             ne = self.ica.get_notfound( df3, f3, [self.fcols[0],self.pcols[1]], ['nro_devolucion','upc'], 'nro_devolucion', 'F3|UPC|QTY')
             df4 = pd.merge(df3, f3, left_on=[self.fcols[0],self.pcols[1]], right_on=['nro_devolucion','upc'])
             if df4.empty ==False: 
-                df5 = self.ica.get_equalvalue(df4, 'descripcion6', 'Anulado', 'ANU', 'Registro anulado')
+                df5 = self.ica.get_equalvalue(df4, 'descripcion6', 'anulado', 'ANU', 'Registro anulado')
                 comment = f'La cantidad sumada de los {dqpcol} de un f3 es mayor que la cantidad del f3'
                 if df5.empty == False:
                     df6 = self.ica.get_diffqty_pro(df5, self.pcols[3], 'cantidad',dqpcol, 'nro_devolucion' ,comment)
@@ -50,7 +50,7 @@ class CierresNC:
             ne = self.ica.get_notfound( df3, f4, [self.fcols[1], self.pcols[1]], ['nro_red_inventario','upc'], 'nro_red_inventario', 'F4|UPC|QTY')
             df4 = pd.merge(df3, f4, left_on=[self.fcols[1], self.pcols[1]], right_on=['nro_red_inventario','upc'])
             if df4.empty ==False: 
-                df5 = self.ica.get_equalvalue(df4, 'estado', 'Anulado', 'ANU', 'Registro anulado')
+                df5 = self.ica.get_equalvalue(df4, 'estado', 'anulado', 'ANU', 'Registro anulado')
                 df6 = self.ica.get_diffvalue(df5, 'aa creacion', yyyy, 'NAA', f'Registro con año de creación diferente a {yyyy}')
                 comment = 'Cantidad de las NCs de un F4 > cantidad del F4'
                 if df6.empty == False:
@@ -67,8 +67,8 @@ class CierresNC:
             ne = self.ica.get_notfound( df3, f5, [self.fcols[2], self.pcols[1]], ['transfer','upc'], 'transfer', 'F5|UPC|Qty')
             df4 = pd.merge(df3, f5, left_on=[self.fcols[2], self.pcols[1]], right_on=['transfer','upc'])
             if df4.empty ==False: 
-                df5 = self.ica.get_diffvalue(df4, 'estado', 'Recibido', 'NRE', 'Registro con estado diferente a recibido')
-                df6 = self.ica.get_equalvalue(df5, 'motivo_discrepancia', 'F5 NO RECIBIDO', 'MDI', 'Registro con motivo de disc: F5 no recibido')
+                df5 = self.ica.get_diffvalue(df4, 'estado', 'recibido', 'NRE', 'Registro con estado diferente a recibido')
+                df6 = self.ica.get_equalvalue(df5, 'motivo_discrepancia', 'f5 no recibido', 'MDI', 'Registro con motivo de disc: F5 no recibido')
                 df7 = self.ica.get_diffvalue(df6, 'aaaa reserva', yyyy, 'NAA', f'Registro con año de reserva diferente a {yyyy}')
                 comment = 'Cantidad de las NCs de un F5 != (cantidad pickeada | cantidad recibida del F5)'
                 if df7.empty == False: 
@@ -85,8 +85,8 @@ class CierresNC:
             ne = self.ica.get_notfound( df3, f5, [self.fcols[2], self.pcols[1]], ['transfer','upc'], 'transfer', 'F5|UPC|Qty')
             df4 = pd.merge(df3, f5, left_on=[self.fcols[2], self.pcols[1]], right_on=['transfer','upc'])
             if df4.empty ==False:
-                df5 = self.ica.get_diffvalue(df4, 'estado', 'Recibido', 'NRE', 'Registro con estado diferente a recibido')
-                df6 = self.ica.get_equalvalue(df5, 'motivo_discrepancia', 'F5 NO RECIBIDO', 'MDI', 'Registro con motivo de disc: F5 no recibido')
+                df5 = self.ica.get_diffvalue(df4, 'estado', 'recibido', 'NRE', 'Registro con estado diferente a recibido')
+                df6 = self.ica.get_equalvalue(df5, 'motivo_discrepancia', 'f5 no recibido', 'MDI', 'Registro con motivo de disc: F5 no recibido')
                 df7 = self.ica.get_diffvalue(df6, 'aaaa reserva', yyyy, 'NAA', f'Registro con año de reserva diferente a {yyyy}')
                 comment = 'Cantidad de las NCs de un F5 != (cantidad pickeada | cantidad recibida del F5)'
                 if df7.empty == False: 
@@ -105,8 +105,8 @@ class CierresNC:
             ne = self.ica.get_notfound( df3, f5, [self.fcols[2], self.pcols[1]], ['transfer','upc'], 'transfer', 'F5|UPC|Qty')
             df4 = pd.merge(df3, f5, left_on=[self.fcols[2], self.pcols[1]], right_on=['transfer','upc'])
             if df4.empty ==False: 
-                df5 = self.ica.get_diffvalue(df4, 'estado', 'Recibido', 'NRE', 'Registro con estado diferente a recibido')
-                df6 = self.ica.get_equalvalue(df5, 'motivo_discrepancia', 'F5 NO RECIBIDO', 'MDI', 'Registro con motivo de disc: F5 no recibido')
+                df5 = self.ica.get_diffvalue(df4, 'estado', 'recibido', 'NRE', 'Registro con estado diferente a recibido')
+                df6 = self.ica.get_equalvalue(df5, 'motivo_discrepancia', 'f5 no recibido', 'MDI', 'Registro con motivo de disc: F5 no recibido')
                 df7 = self.ica.get_diffvalue(df6, 'aaaa reserva', yyyy, 'NAA', f'Registro con año de reserva diferente a {yyyy}')
                 comment = 'Cantidad de las NCs de un F5 != (cantidad pickeada | cantidad recibida del F5)'
                 df8, lista = self.ica.get_notinlist(df7, 'local_recep', locales, 'NCL', f'Registro con local diferente a {local}')
@@ -120,3 +120,11 @@ class CierresNC:
                 return nil 
         else: 
             return nil 
+    
+    def starting(self, cols):
+        # verificar duplicidad en toda la base 
+        self.ica.get_dup_all_db(cols)
+        
+    def finals(self):
+        # verificar registros revisados
+        self.ica.get_checked()
