@@ -1,5 +1,4 @@
 import pandas as pd
-from datetime import datetime
 from unidecode import unidecode
 import numpy as np
 

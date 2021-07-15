@@ -1,9 +1,7 @@
 # Librerías
-from os import name
 import pandas as pd
 from datetime import datetime
 from cl_cleaning import CleaningText as ct 
-from unidecode import unidecode
 from tqdm import tqdm
 
 dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
@@ -24,10 +22,6 @@ f4 = pd.read_csv(f'input/init_data/210713-111810-f4-output.csv', sep=';', dtype=
 f5 = pd.read_csv(f'input/init_data/210713-111810-f5-output.csv', sep=';', dtype='object')
 kpi = pd.read_csv(f'input/init_data/210713-111810-kpi.csv', sep=';', dtype='object')
 refact = pd.read_csv(f'input/init_data/210616-refact.csv', sep=';', dtype='object')
-cf11_20= pd.read_csv(f'input/init_data/210712_cierres_f11_20.csv', sep=';',dtype='object')
-cf11_21 = pd.read_csv(f'input/init_data/210629_cierre_21.csv', sep=';',dtype='object')
-cf11_tienda = pd.read_csv(f'input/init_data/210713-081523-cf11_tienda_20.csv', sep=';',dtype='object')
-cierres_nc = pd.read_csv(f'input/init_data/210709-151757-nc.csv', sep=';',dtype='object')
 
 # Declaración de columnas requeridas 
 f3_colsreq = ['nro_devolucion', 'fecha_reserva', 'fecha_envio', 'fecha_anulacion', 'fecha_confirmacion', 'upc', 'sku', 'linea', 'descripcion6', 'cantidad', 'folio_f11', 'folio_f12']
@@ -83,6 +77,7 @@ lista_text = [f3_text, f4_text, f5_text, kpi_text, refact_text]
 
 # Data aggregation 
 if data_select=='1': # CF11s CD 2020 
+    cf11_20= pd.read_csv(f'input/init_data/210712_cierres_f11_20.csv', sep=';',dtype='object')
     lista.append(cf11_20)
     names.append('cf11_cd_20')
     dfs_colsreq.append(cf11_20_colsreq)
@@ -91,6 +86,7 @@ if data_select=='1': # CF11s CD 2020
     lista_text.append(cf11_20_text)
 
 elif data_select=='2': # CF11s 2021 
+    cf11_21 = pd.read_csv(f'input/init_data/210629_cierre_21.csv', sep=';',dtype='object')
     lista.append(cf11_21)
     names.append('cf11_cd_21')
     dfs_colsreq.append(cf11_21_colsreq)
@@ -99,6 +95,7 @@ elif data_select=='2': # CF11s 2021
     lista_text.append(cf11_21_text)
 
 elif data_select =='3': # CF11s Tienda 2020 
+    cf11_tienda = pd.read_csv(f'input/init_data/210713-081523-cf11_tienda_20.csv', sep=';',dtype='object')
     lista.append(cf11_tienda)
     names.append('cf11_tienda_20')
     dfs_colsreq.append(cf11_tienda_colsreq)
@@ -107,6 +104,7 @@ elif data_select =='3': # CF11s Tienda 2020
     lista_text.append(cf11_tienda_text)
 
 elif data_select == '4': # Cierres NCs 
+    cierres_nc = pd.read_csv(f'input/init_data/210709-151757-nc.csv', sep=';',dtype='object')
     lista.append(cierres_nc)
     names.append('cierres_nc')
     dfs_colsreq.append(cnc_colsreq)

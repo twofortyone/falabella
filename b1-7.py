@@ -1,6 +1,6 @@
-import collections
 import pandas as pd 
 from cl_cleaning import CleaningText as ct 
+
 b1 = pd.read_csv(f'input/ajustes_3000/210528/base1.csv', sep=';', dtype='object')
 b2 = pd.read_csv(f'input/ajustes_3000/210528/base2345.csv', sep=';', dtype='object')
 b6 = pd.read_csv(f'input/ajustes_3000/210528/base6.csv', sep=';', dtype='object')
@@ -14,7 +14,6 @@ b2 = ct.normalizar_cols(b2)
 
 b6 = b6.rename(columns={'COSTO TOTAL':'costo_total'})
 b6 = ct.normalizar_cols(b6)
-
 
 b7 = ct.normalizar_cols(b7)
 

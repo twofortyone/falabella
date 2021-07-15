@@ -1,9 +1,7 @@
-from os import path
 import pandas as pd
 from datetime import datetime
-import numpy as np
 from cl_cleaning import CleaningText as ct 
-from ica import InternalControlAnalysis 
+from ica_raw import InternalControlAnalysis 
 
 # Configuraciones 
 pd.set_option('float_format', '{:,.2f}'.format) # Configura pandas para mostrar solo dos decimales 

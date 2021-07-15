@@ -1,6 +1,5 @@
 import pandas as pd
 from datetime import datetime
-from cl_cleaning import CleaningText as ct 
 
 # Variables 
 dt_string = datetime.now().strftime('%y%m%d-%H%M%S')

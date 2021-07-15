@@ -1,10 +1,8 @@
 # Librerías
 import pandas as pd
 from datetime import datetime
-import numpy as np
 from cl_cleaning import CleaningText as ct 
-from ica import InternalControlAnalysis
-from report import Report 
+from ica_raw import InternalControlAnalysis
 
 # Configuraciones
 pd.set_option('float_format', '{:,.2f}'.format)
@@ -49,7 +47,6 @@ b7 = ica.get_db()
 b7.loc[iokkpi, 'CIKPI'] = 'OKK'
 b7.loc[iokkpi, 'CIA'] = 'OKK'
 # Reporte 
-reporte = Report('b7')
 print('\n ----------------- Base 7 ----------------- ')
 print('\n ## Resumen de información según tipificacion')
 print(b7[['tipificacion', cost_column]].groupby('tipificacion').sum().sort_values(by=cost_column, ascending=False))
@@ -61,7 +58,7 @@ daa = [ndy, dfkpi.shape[0], cdy]
 total = [nfnan+ndu+nne+ndy, nb7ccd,cfnan+cdu+cne+cdy ]
 summaryres = b7[[cost_column, 'CIKPI', 'tipificacion']].groupby(['tipificacion', 'CIKPI']).agg(['sum', 'size']).sort_values(by=(cost_column,'sum'), ascending=False)
 # reporte.print_analysis(comp='F5', comments='para estado cerrado', nan=nan, du=du, ne=nex, dc=ncc, summary=summaryres)
-reporte.print_analysis(comp='KPI', comments='para tipificación CERRADO - Recibido en CD', total=total, nan=nan, du=du, ne=nex, daa=daa, summary=summaryres)
+#reporte.print_analysis(comp='KPI', comments='para tipificación CERRADO - Recibido en CD', total=total, nan=nan, du=du, ne=nex, daa=daa, summary=summaryres)
 
 # Tareas finales 
 b7.to_csv(f'output/{dt_string}-b7.csv', sep=';', decimal=',', index=False) # Guarda el archivo 

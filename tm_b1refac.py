@@ -1,12 +1,8 @@
 # Librerías
 import pandas as pd
 from datetime import datetime
-from unidecode import unidecode
-import numpy as np
 from cl_cleaning import CleaningText as ct 
 from ica_raw import InternalControlAnalysis
-from report import Report 
-from ica_cierres import CierresF11
 
 # Configuraciones
 pd.set_option('float_format', '{:,.2f}'.format)

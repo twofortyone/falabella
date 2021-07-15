@@ -1,10 +1,8 @@
 # Librerías
 import pandas as pd
 from datetime import datetime
-import numpy as np
 from cl_cleaning import CleaningText as ct 
-from ica import InternalControlAnalysis
-from report import Report 
+from ica_raw import InternalControlAnalysis
 
 # Configuraciones
 pd.set_option('float_format', '{:,.2f}'.format)
@@ -64,7 +62,6 @@ ica.update_db(iokf3, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY')
 b6 = ica.get_db()
 
 # Reporte 
-reporte = Report('b6')
 print('\n ----------------- Base 6 ----------------- ')
 print('\n ## Resumen de información según estado')
 print(b6[['estado_2', cost_column]].groupby('estado_2').sum().sort_values(by=cost_column, ascending=False))

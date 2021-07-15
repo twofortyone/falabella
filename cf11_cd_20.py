@@ -3,7 +3,6 @@ import pandas as pd
 from datetime import datetime
 from cl_cleaning import CleaningText as ct 
 from ica_cierres import CierresF11
-from unidecode import unidecode
 import numpy as np 
 
 # Configuraciones
