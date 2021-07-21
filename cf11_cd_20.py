@@ -12,8 +12,10 @@ pd.set_option('float_format', '{:,.2f}'.format)
 data = []
 names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_cd_20']
 
+pre_file = input('Ingrese prefijo de archivos: ')
+
 for name in names:
-    data.append(pd.read_csv(f'input/cierres_f11/210716_cd_20/210716-0930-{name}.csv', sep=';', dtype='object'))
+    data.append(pd.read_csv(f'input/cierres_f11/cd/{pre_file}{name}.csv', sep=';', dtype='object'))
 
 f3, f4, f5, kpi, refact, cf11 = data[0],data[1],data[2],data[3],data[4],data[5]
 

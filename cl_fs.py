@@ -13,8 +13,8 @@ f4_filename = '210715_f4'
 f5_numfiles = 3
 f5_filename = '210716_f5_3000' # Prefijo del nombre del archivo 
 kpi_filename = '210716_kpi'
-db_excelname = '210713_cf11_cd_20'
-db_excelsheet = 'Base'
+db_excelname = '210712_cf11_tiendas_sac'
+db_excelsheet = 'Sheet1'
 #--------------------------------------------------------------
 
 # Functions 

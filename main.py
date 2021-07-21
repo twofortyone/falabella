@@ -1,7 +1,4 @@
-
-
 from io import SEEK_SET
-
 
 select_var = ''
 

@@ -26,8 +26,10 @@ fcols = ['f3','f4','f5','f11', '', 'cod_aut_nc']
 data = []
 names = ['f3', 'f4', 'f5', 'kpi','refact', 'cierres_nc']
 
+pre_file = input('Ingrese prefijo de archivos: ')
+
 for name in names:
-    data.append(pd.read_csv(f'input/cierres_nc/210716/210716-1635-{name}.csv', sep=';', dtype='object'))
+    data.append(pd.read_csv(f'input/cierres_nc/{pre_file}{name}.csv', sep=';', dtype='object'))
 
 f3, f4, f5, kpi, refact, nc = data[0],data[1],data[2],data[3],data[4],data[5]
 
