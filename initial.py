@@ -6,4 +6,7 @@ from cl_cleaning import CleaningText as ct
 
 class DBSetUp():
     def __init__(self) -> None:
-        pass
+        print('Hola')
+    
+    if __name__ == '__main__':
+        __init__(__name__)

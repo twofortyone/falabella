@@ -1,5 +1,6 @@
 import pandas as pd
 from datetime import datetime
+import numpy as np 
 
 class InternalControlAnalysis:
 
@@ -10,7 +11,7 @@ class InternalControlAnalysis:
         """
         self.db = db.copy()
         self.index_column = indexcol
-        self.dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
+        self.dt_string = datetime.now().strftime('%y%m%d-%H%M')
 
     def get_db(self):
         return self.db
@@ -20,7 +21,7 @@ class InternalControlAnalysis:
     
     def get_okk_dup(self, rwos, cols, llave):
         aux = self.db.loc[rwos]
-        aux = aux.loc[(aux['GCO']=='OKK')&(aux['gco_dup']=='y')]
+        aux = aux.loc[(aux['GCO']=='OKK')&(aux['gco_dupall']=='y')]
         self.db.loc[aux[self.index_column].values, cols] = f'Coincidencia {llave} + Registro duplicado en DB'
 
     def get_dup_i(self, rwos, llave):
@@ -247,3 +248,39 @@ class InternalControlAnalysis:
         self.db.loc[inotinlist, 'Comentario GCO'] = comment
         bdquery_res = bdquery[bdquery[valuecol].isin(lista)]
         return bdquery_res, list(notinlist3['local_recep'])
+    
+        #-----------------------------------------------------
+    def dupall(self):
+        # 30 de junio de 2021 
+        # Comparar duplicados con los de michael 
+        # TODO  pasar a método 
+        dup_cols = ['f12', 'prd_upc']
+        redcols = ['f12', 'prd_upc','status_nuevo']
+
+        concept1 = 'cierre x duplicidad (f11 con mismo f12+sku+cantidad)'
+        concept2 = 'registro duplicado en base de datos'
+        sin_cat_dup = self.db[(self.db['status_nuevo']!= concept1)&(self.db['status_nuevo']!=concept2)]
+        cat_dup = self.db[((self.db['status_nuevo']== concept1)|(self.db['status_nuevo']==concept2))]
+        self.db.loc[((self.db['status_nuevo']== concept1)|(self.db['status_nuevo']==concept2)), 'checked'] ='y'
+        #sin_cat_dup = self.db[self.db['status_nuevo']!= concept1] # No es categoría dup
+        #cat_dup = self.db[self.db['status_nuevo']== concept1] # Es categoría dup
+
+        cat_dup_mas_gco = cat_dup.loc[cat_dup['gco_dup']=='y'] # Duplicados para MC y GCO
+
+        cat_dup_mas_gco = cat_dup_mas_gco[redcols]
+        self.db.loc[cat_dup_mas_gco.index, 'dupmc'] = 'y'
+        self.db.loc[cat_dup_mas_gco.index, 'checked'] = 'y'
+        cat_dup_mas_gco.drop_duplicates(dup_cols, inplace=True)
+
+        mdup = pd.merge(sin_cat_dup, cat_dup_mas_gco, on=dup_cols,validate='many_to_one') # Registros unicos MC de duplicados
+        print(mdup.empty)
+        self.db.loc[mdup['indice_cf11'].values, 'dupmc'] = 'y'
+        self.db.loc[mdup['indice_cf11'].values, 'checked'] = 'y'
+
+        aux = mdup[mdup.duplicated(dup_cols)]
+        self.db.loc[aux['indice_cf11'].values, 'dupmc'] = np.nan
+        self.db.loc[aux['indice_cf11'].values,'error_ru'] = 'y'
+
+        self.db.loc[(self.db['dupmc'].isna())& (self.db['gco_dup'] =='y') ,'gco_dupall'] = 'y'
+        #self.db.loc[(self.db['dupmc'].isna())& (self.db['gco_dup'] =='y') & (self.db.GCO =='OKK'),'Comentario GCO'] = 'Coincidencia exacta + Registro duplicado en DB'
+    #-----------------------------------------------------

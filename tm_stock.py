@@ -7,7 +7,7 @@ from cl_cleaning import CleaningText as ct
 pd.set_option('float_format', '{:,.2f}'.format)
 
 # Variables 
-dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
+dt_string = datetime.now().strftime('%y%m%d-%H%M')
 #names = ['LOCAL', 'LINEA', 'DESCRIP.LINEA', 'SUBINEA', 'DESCRIP.SUBL', 'CLASE',
 #       'DESCRIP.CLASE', 'SUBCLASE', 'DESCRIP.SUBCLASE', 'MARCA', 'NUMBER',
 #       'UPC', 'DESCRIP.PRODUCTO', 'P.VTA', 'STOCK DISPONIBLE', 'UN']

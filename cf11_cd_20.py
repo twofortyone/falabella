@@ -13,12 +13,12 @@ data = []
 names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_cd_20']
 
 for name in names:
-    data.append(pd.read_csv(f'input/cierres_f11s/210712/210712-211321-{name}.csv', sep=';', dtype='object'))
+    data.append(pd.read_csv(f'input/cierres_f11/210716_cd_20/210716-0930-{name}.csv', sep=';', dtype='object'))
 
 f3, f4, f5, kpi, refact, cf11 = data[0],data[1],data[2],data[3],data[4],data[5]
 
 # Variables 
-dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
+dt_string = datetime.now().strftime('%y%m%d-%H%M')
 index_name = 'indice_cf11'
 cost_column = 'total_costo_promedio'
 status_column = 'status_nuevo'
@@ -82,60 +82,26 @@ cierres.refact_verify(refact, 'cierre x recupero con cliente - refacturacion - b
 cierres.finals()
 cf11 = cierres.ica.get_db()
 
-# 30 de junio de 2021 
-# Comparar duplicados con los de michael 
-# TODO  pasar a método 
-concept1 = 'cierre x duplicidad (f11 con mismo f12+sku+cantidad)'
-#concept2 = 'registro duplicado en base de datos'
-#sin_cat_dup = cf11[(cf11['status_nuevo']!= concept1)&(cf11['status_nuevo']!=concept2)]
-sin_cat_dup = cf11[cf11['status_nuevo']!= concept1] # No es categoría dup
-
-cat_dup = cf11[cf11['status_nuevo']== concept1] # Es categoría dup
-#cat_dup = cf11[((cf11['status_nuevo']== concept1)|(cf11['status_nuevo']==concept2))]
-
-dup_cols = ['f12', 'prd_upc']
-cat_dup_mas_gco = cat_dup[cat_dup['gco_dup']=='y'] # Duplicados para MC y GCO
-redcols = ['f12', 'prd_upc']
-redcols.append('status_nuevo')
-#redcols.append(index_name)
-cat_dup_mas_gco = cat_dup_mas_gco[redcols]
-
-cat_dup_mas_gco.drop_duplicates(dup_cols, inplace=True)
-
-cf11.loc[cat_dup_mas_gco.index, 'dupmc'] = 'y'
-
-mdup = pd.merge(sin_cat_dup, cat_dup_mas_gco, on=dup_cols,validate='many_to_one') # Registros unicos MC de duplicados
-print(mdup.empty)
-cf11.loc[mdup['indice_cf11'].values, 'dupmc'] = 'y'
-
-aux = mdup[mdup.duplicated(dup_cols)]
-cf11.loc[aux['indice_cf11'].values, 'dupmc'] = np.nan
-cf11.loc[aux['indice_cf11'].values,'error_ru'] = 'y'
-
-cf11.loc[(cf11['dupmc'].isna())& (cf11['gco_dup'] =='y') ,'gco_dupall'] = 'y'
-cf11.loc[(cf11['dupmc'].isna())& (cf11['gco_dup'] =='y') & (cf11.GCO =='OKK'),'Comentario GCO'] = 'Coincidencia exacta + Registro duplicado en DB'
-
 print(cf11.groupby('gco_dup')[cost_column].sum())
 print(cf11.groupby('gco_dupall')[cost_column].sum())
-
 res = cf11.groupby([status_column,'GCO']).agg({cost_column:['sum', 'size']}).sort_values(by=[status_column,(cost_column,'sum')], ascending=False)
 print(res)# Presenta todos los estados 
 
 def guardar():
-    cf11.to_excel(f'output/{dt_string}-novedades-cf11s_cd_20.xlsx', sheet_name=f'{dt_string}_cf11_cd_20', index=False, encoding='utf-8') # Guarda el archivo 
+    cf11.to_excel(f'output/cierres_f11/{dt_string}-novedades-cf11s_cd_20.xlsx', sheet_name=f'{dt_string}_cf11_cd_20', index=False, encoding='utf-8') # Guarda el archivo 
     bdcia = cf11.merge(f3, how='left', left_on=[fcols[0],'prd_upc'], right_on=['nro_devolucion','upc'], validate='many_to_one')
     bdcia2 = bdcia.merge(f4, how='left',  left_on=[fcols[1],'prd_upc'], right_on=['nro_red_inventario','upc'],validate='many_to_one')
     bdcia3 = bdcia2.merge(f5, how='left', left_on=[fcols[2],'prd_upc'], right_on=['transfer','upc'], validate='many_to_one')
     bdcia4 = bdcia3.merge(kpi, how='left',left_on=[fcols[3]], right_on=['entrada'],validate='many_to_one')
     bdcia5 = bdcia4.merge(kpi, how='left',left_on=[fcols[4]], right_on=['entrada'],validate='many_to_one')
     #bdcia6 = bdcia4.merge(refact, how='left',left_on=[fcols[4]], right_on=['f12cod'],validate='many_to_one')
-    bdcia5.to_excel(f'output/{dt_string}-novedades-cf11s_cd_20-all.xlsx', sheet_name=f'{dt_string}_cf11_cd_20',index=False) 
+    bdcia5.to_excel(f'output/cierres_f11/{dt_string}-nov-cf11s_cd_20-all.xlsx', sheet_name=f'{dt_string}_cf11_cd_20',index=False) 
 
 print('Desea guardar los resultados? (y/n)')
 save_res = input('//:')
 
 if save_res=='y':
     guardar()
-    print(f'Guardado como: {dt_string}-novedades-cf11s_cd_20.xlsx')
+    print(f'Guardado como: {dt_string}-nov-cf11s_cd_20.xlsx')
 else:
     print('Ok')

@@ -2,17 +2,24 @@ import pandas as pd
 from datetime import datetime
 
 # Variables 
-dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
+dt_string = datetime.now().strftime('%y%m%d-%H%M')
 
-enero = pd.read_csv(f'input/nc_3000/210709/data/enero.csv', sep=';', dtype='object')
-febrero= pd.read_csv(f'input/nc_3000/210709/data/febrero.csv', sep=';', dtype='object')
-marzo= pd.read_csv(f'input/nc_3000/210709/data/marzo.csv', sep=';', dtype='object')
-abril= pd.read_csv(f'input/nc_3000/210709/data/abril.csv', sep=';', dtype='object')
-mayo= pd.read_csv(f'input/nc_3000/210709/data/mayo.csv', sep=';', dtype='object')
-junio= pd.read_csv(f'input/nc_3000/210709/data/junio.csv', sep=';', dtype='object')
+filename= '210716_cnc'
+print('Loading month 1')
+enero = pd.read_excel(f'input/bases/{filename}.xlsx', sheet_name='enero', dtype='object')
+print('Loading month 2')
+febrero= pd.read_excel(f'input/bases/{filename}.xlsx', sheet_name='febrero', dtype='object')
+print('Loading month 3')
+marzo= pd.read_excel(f'input/bases/{filename}.xlsx', sheet_name='marzo', dtype='object')
+print('Loading month 4')
+abril= pd.read_excel(f'input/bases/{filename}.xlsx', sheet_name='abril', dtype='object')
+print('Loading month 5')
+mayo= pd.read_excel(f'input/bases/{filename}.xlsx', sheet_name='mayo', dtype='object')
+print('Loading month 6')
+junio= pd.read_excel(f'input/bases/{filename}.xlsx', sheet_name='junio', dtype='object')
 
 meses = [enero, febrero, marzo, abril, mayo, junio]
-
+print('Concate months')
 nc = pd.concat(meses, axis=0)
-
-nc.to_csv(f'output/{dt_string}-nc.csv', sep=';', index=False)
+print('Saving NCs')
+nc.to_csv(f'output/bases/{dt_string}-cnc.csv', sep=';', index=False)

@@ -8,7 +8,7 @@ from ica_raw import InternalControlAnalysis
 pd.set_option('float_format', '{:,.2f}'.format)
 
 # Variables 
-dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
+dt_string = datetime.now().strftime('%y%m%d-%H%M')
 index_name = 'indice_b7'
 cost_column = 'ct'
 

@@ -4,7 +4,7 @@ from datetime import datetime
 from cl_cleaning import CleaningText as ct 
 from tqdm import tqdm
 
-dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
+dt_string = datetime.now().strftime('%y%m%d-%H%M')
 
 # Configuraciones
 pd.set_option('float_format', '{:,.2f}'.format)
@@ -17,11 +17,11 @@ print('4. Cierres de NCs')
 data_select = input('Seleccione una opción (1-4):')
 
 # Cargar data
-f3 = pd.read_csv(f'input/init_data/210713-111810-f3-output.csv', sep=';', dtype='object')
-f4 = pd.read_csv(f'input/init_data/210713-111810-f4-output.csv', sep=';', dtype='object')
-f5 = pd.read_csv(f'input/init_data/210713-111810-f5-output.csv', sep=';', dtype='object')
-kpi = pd.read_csv(f'input/init_data/210713-111810-kpi.csv', sep=';', dtype='object')
-refact = pd.read_csv(f'input/init_data/210616-refact.csv', sep=';', dtype='object')
+f3 = pd.read_csv(f'input/init_data/210715-1643-f3-output.csv', sep=';', dtype='object')
+f4 = pd.read_csv(f'input/init_data/210715-1643-f4-output.csv', sep=';', dtype='object')
+f5 = pd.read_csv(f'input/init_data/210716-1609-f5-3000-output.csv', sep=';', dtype='object')
+kpi = pd.read_csv(f'input/init_data/210715-1643-kpi-output.csv', sep=';', dtype='object')
+refact = pd.read_csv(f'input/init_data/210630_refact.csv', sep=';', dtype='object')
 
 # Declaración de columnas requeridas 
 f3_colsreq = ['nro_devolucion', 'fecha_reserva', 'fecha_envio', 'fecha_anulacion', 'fecha_confirmacion', 'upc', 'sku', 'linea', 'descripcion6', 'cantidad', 'folio_f11', 'folio_f12']
@@ -29,7 +29,7 @@ f4_colsreq = ['nro_red_inventario', 'estado','fecha_creacion', 'destino', 'linea
 f5_colsreq = ['transfer', 'estado', 'fe_reserva', 'fe_envo', 'fe_recep','local_envo', 'local_recep', 'tipo_de_f5','sku', 'upc', 'cant_pickeada', 'cant_recibida', 'motivo_discrepancia']
 kpi_colsreq = ['index', 'tip0_trabajo', 'entrada','fecha_paletiza', 'aaaa_paletiza']
 refac_colsreq = ['medio_pago','cod#aut', '4_ult', 'f12cod', 'orden_de_compra','cedula', 'valor_boleta','fecha_devolucion', 'confirmacion_facturacion', 'confirmacion_tesoreria']
-cf11_20_colsreq  = ['nfolio','f12', 'prd_upc', 'qproducto', 'xobservacion', 'total_costo_promedio', 'estado_actual', 'status_nuevo', 'f3nuevo', 'f4_nuevo', 'nuevo_f11', 'f5'] # Para cd 2020 
+cf11_20_colsreq  = ['nfolio','f12', 'prd_upc', 'qproducto', 'xobservacion', 'total_costo_promedio', 'estado_actual', 'status_nuevo', 'f3nuevo', 'f4_nuevo', 'nuevo_f11', 'f5', 'reporte_a_contabilidad', 'movimiento_contable', 'nc', 'tranf_electro_factura', 'pv'] # Para cd 2020 
 cf11_21_colsreq  = ['f11','f12', 'prd_upc', 'qproducto', 'xobservacion', 'costo_total', 'estado_actual', 'status_final', 'f3', 'f4', 'f5'] # Para cd 2021 
 cf11_tienda_colsreq = ['nfolio','upc', 'estado', 'producto', 'qproducto', 'total_costo_promedio', 'f', 'f3', 'f4', 'motivo']
 cnc_colsreq = ['cod_aut_nc', 'local_trx', 'terminal', 'local_ant', 'upc', 'ct', 'cantidad_trx_actual', 'tipo_nc', 'f3', 'f4','f5', 'f11', 'esmc', 'tipmc']
@@ -75,15 +75,69 @@ cf11_tienda_text = ['motivo', 'estado']
 cnc_text = ['esmc', 'tipmc']
 lista_text = [f3_text, f4_text, f5_text, kpi_text, refact_text]
 
+def get_data():
+    # Normailzar headers
+    print('Normalizando encabezados')
+    for item in tqdm(lista): 
+        ct.norm_header(item)
+
+    # Eliminar columnas no requeridas
+    def drop_except(df, cols):
+        df.drop(df.columns.difference(cols), axis=1, inplace=True)
+        return df 
+
+    print('Eliminando columnas no requeridas')
+    for i in tqdm(range(len(lista))): 
+        drop_except(lista[i],dfs_colsreq[i])
+
+    # Limpiar texto
+    print('Limpiando texto en columnas')
+    for i, item in enumerate(tqdm(lista_text)):
+        lista[i].loc[:, item] = lista[i].loc[:, item].apply(ct.clean_str)
+
+    # Convertir a número fs 
+    print('Convirtiendo a número parte 1')
+    for i, item in enumerate(tqdm(lista_fnum)):
+        lista[i].loc[:, item] = lista[i].loc[:, item].apply(ct.clean_fnum)
+
+    # Convertir a número cantidades y costos 
+    print('Convirtiendo a número parte 2')
+    for i, item in enumerate(tqdm(lista_num)):
+        if (i!=3)&(i!=4): 
+            lista[i].loc[:, item] = lista[i].loc[:, item].apply(ct.clean_num)
+
+    # Eliminar filas duplicados 
+    lista[0].drop_duplicates(['nro_devolucion', 'upc'], inplace= True)
+    lista[1].drop_duplicates(['nro_red_inventario', 'upc'], inplace=True)
+    lista[2].drop_duplicates(['transfer','upc'], inplace=True)
+    lista[3].drop_duplicates(['entrada'], inplace=True)
+    lista[4].drop_duplicates(['f12cod', 'orden_de_compra'], inplace=True)
+
+    # Eliminar registros con #s de F nulos 
+    lista[0] = f3[f3.nro_devolucion.notna()]
+    lista[1] = f4[f4.nro_red_inventario.notna()]
+    lista[2] = f5[f5.transfer.notna()]
+    lista[3] = kpi[kpi.entrada.notna()]
+    lista[4] = refact[refact.f12cod.notna()]
+
+def save_files():
+    # Guardar archivos 
+    print('Guardando archivos')
+    for i in tqdm(range(len(lista))):
+        lista[i].to_csv(f'output/{dt_string}-{names[i]}.csv', sep=';', index=False, encoding='utf-8') 
+
 # Data aggregation 
 if data_select=='1': # CF11s CD 2020 
-    cf11_20= pd.read_csv(f'input/init_data/210712_cierres_f11_20.csv', sep=';',dtype='object')
+    #cf11_20 = pd.read_excel('input/init_data/210713_cf11_cd_20.xlsx', sheet_name='Base', dtype='object')
+    cf11_20= pd.read_csv(f'input/init_data/210713_cf11_cd_20.csv', sep=';',dtype='object')
     lista.append(cf11_20)
     names.append('cf11_cd_20')
     dfs_colsreq.append(cf11_20_colsreq)
     lista_fnum.append(cf11_20_fnum)
     lista_num.append(cf11_20_num)
     lista_text.append(cf11_20_text)
+    get_data()
+    save_files()
 
 elif data_select=='2': # CF11s 2021 
     cf11_21 = pd.read_csv(f'input/init_data/210629_cierre_21.csv', sep=';',dtype='object')
@@ -93,6 +147,8 @@ elif data_select=='2': # CF11s 2021
     lista_fnum.append(cf11_21_fnum)
     lista_num.append(cf11_21_num)
     lista_text.append(cf11_21_text)
+    get_data()
+    save_files()
 
 elif data_select =='3': # CF11s Tienda 2020 
     cf11_tienda = pd.read_csv(f'input/init_data/210713-081523-cf11_tienda_20.csv', sep=';',dtype='object')
@@ -102,64 +158,18 @@ elif data_select =='3': # CF11s Tienda 2020
     lista_fnum.append(cf11_tienda_fnum)
     lista_num.append(cf11_tienda_num)
     lista_text.append(cf11_tienda_text)
+    get_data()
+    save_files()
 
 elif data_select == '4': # Cierres NCs 
-    cierres_nc = pd.read_csv(f'input/init_data/210709-151757-nc.csv', sep=';',dtype='object')
+    cierres_nc = pd.read_csv(f'input/init_data/210716-1628-cnc.csv', sep=';',dtype='object')
     lista.append(cierres_nc)
     names.append('cierres_nc')
     dfs_colsreq.append(cnc_colsreq)
     lista_fnum.append(cnc_fnum)
     lista_num.append(cnc_num)
     lista_text.append(cnc_text)
-
+    get_data()
+    save_files()
 else: 
     print('Seleccione una opción correcta (1-4)')
-
-# Normailzar headers
-print('Normalizando encabezados')
-for item in tqdm(lista): 
-    ct.norm_header(item)
-
-# Limpiar texto
-print('Limpiando texto en columnas')
-for i, item in enumerate(tqdm(lista_text)):
-    lista[i].loc[:, item] = lista[i].loc[:, item].apply(ct.clean_str)
-
-# Eliminar columnas no requeridas
-def drop_except(df, cols):
-    df.drop(df.columns.difference(cols), axis=1, inplace=True)
-    return df 
-
-print('Eliminando columnas no requeridas')
-for i in tqdm(range(len(lista))): 
-    drop_except(lista[i],dfs_colsreq[i])
-
-# Convertir a número fs 
-print('Convirtiendo a número parte 1')
-for i, item in enumerate(tqdm(lista_fnum)):
-    lista[i].loc[:, item] = lista[i].loc[:, item].apply(ct.clean_fnum)
-
-# Convertir a número cantidades y costos 
-print('Convirtiendo a número parte 2')
-for i, item in enumerate(tqdm(lista_num)):
-    if (i!=3)&(i!=4): 
-        lista[i].loc[:, item] = lista[i].loc[:, item].apply(ct.clean_num)
-
-# Eliminar filas duplicados 
-lista[0].drop_duplicates(['nro_devolucion', 'upc'], inplace= True)
-lista[1].drop_duplicates(['nro_red_inventario', 'upc'], inplace=True)
-lista[2].drop_duplicates(['transfer','upc'], inplace=True)
-lista[3].drop_duplicates(['entrada'], inplace=True)
-lista[4].drop_duplicates(['f12cod', 'orden_de_compra'], inplace=True)
-
-# Eliminar registros con #s de F nulos 
-lista[0] = f3[f3.nro_devolucion.notna()]
-lista[1] = f4[f4.nro_red_inventario.notna()]
-lista[2] = f5[f5.transfer.notna()]
-lista[3] = kpi[kpi.entrada.notna()]
-lista[4] = refact[refact.f12cod.notna()]
-
-# Guardar archivos 
-print('Guardando archivos')
-for i in tqdm(range(len(lista))):
-    lista[i].to_csv(f'output/{dt_string}-{names[i]}.csv', sep=';', index=False, encoding='utf-8') 

@@ -18,7 +18,7 @@ f3, f4, f5, kpi, refact, cf11 = data[0],data[1],data[2],data[3],data[4],data[5]
 
 cf11 = cf11.rename(columns={'f11':'nfolio'})
 # Variables 
-dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
+dt_string = datetime.now().strftime('%y%m%d-%H%M')
 index_name = 'indice_cf11'
 cost_column = 'costo_total'
 status_column = 'status_final'

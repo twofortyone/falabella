@@ -16,7 +16,7 @@ for name in names:
 f3, f4, f5, kpi, refact, c11t = data[0],data[1],data[2],data[3],data[4],data[5]
 
 # Variables 
-dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
+dt_string = datetime.now().strftime('%y%m%d-%H%M')
 index_name = 'indice_c11t'
 cost_column = 'total_costo_promedio'
 status_column = 'motivo'

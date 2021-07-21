@@ -13,7 +13,7 @@ f3 = pd.read_csv('input/210513-204312-f3v1-output.csv', sep=';', dtype='object')
 kpi = pd.read_csv('input/210528-153310-kpi.csv', sep=';', dtype='object')
 
 # Variables
-dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
+dt_string = datetime.now().strftime('%y%m%d-%H%M')
 index_name = 'indice_b25'
 cost_column = 'total'
 

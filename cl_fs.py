@@ -3,24 +3,31 @@ from datetime import datetime
 from cl_cleaning import CleaningText as ct 
 
 # Variables 
-dt_string = datetime.now().strftime('%y%m%d-%H%M%S')
+dt_string = datetime.now().strftime('%y%m%d-%H%M')
+# Verificar para cada archivo  
+f3_filename = '210715_f3' 
+f4_numfiles = 2
+f4_filename = '210715_f4'
+f5_numfiles = 3
+f5_filename = '210716_f5_3000' # Prefijo del nombre del archivo 
+kpi_filename = '210716_kpi'
+db_excelname = '210716_cnc'
+db_excelsheet = 'junio'
+#--------------------------------------------------------------
 
 # Functions 
 def delete_initial_rows(text_file, fname):
     file = open(text_file, 'r', encoding='ISO-8859-1')
     lines = file.readlines()
     file.close()
-    f = open('input/' + fname, 'w')
+    f = open(f'input/planillas/{fname}', 'w')
     f.writelines(lines[10:])
     f.close()
     return fname
 
-def clean_f3():
-    # Verificar para cada archivo 
-    f3_input_name = '210712_f3' # Prefijo del nombre del archivo 
-    #-------------------------------------------------------------
-    f3_name = delete_initial_rows(f'input/{f3_input_name}.txt', f'{dt_string}_f3.txt')
-    f3 = pd.read_csv(f'input/{f3_name}', sep=';', dtype='object', error_bad_lines=False)
+def clean_f3(f3_input_name):
+    f3_name = delete_initial_rows(f'input/planillas/{f3_input_name}.txt', f'{dt_string}_f3.txt')
+    f3 = pd.read_csv(f'input/planillas/{f3_name}', sep=';', dtype='object', error_bad_lines=False)
     a = f3.shape[0]
     # Obtener filas vacias 
     vacias = f3[f3['Fecha Reserva'].isna()] 
@@ -41,34 +48,29 @@ def clean_f3():
     #print(res1[~res1.index.isin(res.index)])
     #print(res.shape)
     print(f'Se actualizaron {a-res.shape[0]} registros')
-    vacias.to_csv(f'output/{dt_string}-f3-vacias.csv', sep=';', index=False)
-    desplazadas.to_csv(f'output/{dt_string}-f3-desplazadas.csv', sep=';', index=False)
-    res.to_csv(f'output/{dt_string}-f3-output.csv', sep=';', index=False)
+    vacias.to_csv(f'output/planillas/{dt_string}-f3-vacias.csv', sep=';', index=False)
+    desplazadas.to_csv(f'output/planillas/{dt_string}-f3-desplazadas.csv', sep=';', index=False)
+    res.to_csv(f'output/planillas/{dt_string}-f3-output.csv', sep=';', index=False)
 
-def clean_f4():
-    # Verificar para cada archivo 
-    num_f4_files = 2
-    f4_input_name = '210712_f4' # Prefijo del nombre del archivo 
-    #--------------------------------------------------------------
+def clean_f4(f4_input_name, num_f4_files):
     f4 = None 
     list_f4 = []
     # Si son varios archivos de F4s 
     if num_f4_files > 1: 
         for i in range(num_f4_files): 
-            f4_name = delete_initial_rows(f'input/{f4_input_name}_{i}.txt', f'{dt_string}_f4_{i}.txt')
-            f4_aux = pd.read_csv(f'input/{f4_name}', sep=';', dtype='object', error_bad_lines=False)
+            f4_name = delete_initial_rows(f'input/planillas/{f4_input_name}_{i}.txt', f'{dt_string}_f4_{i}.txt')
+            f4_aux = pd.read_csv(f'input/planillas/{f4_name}', sep=';', dtype='object', error_bad_lines=False)
             list_f4.append(f4_aux)
         f4 = pd.concat(list_f4, axis=0)
     else:
-        f4_name = delete_initial_rows(f'input/{f4_input_name}.txt')
-        f4 = pd.read_csv('input/'+ f4_name, sep=';', dtype='object', error_bad_lines=False)
+        f4_name = delete_initial_rows(f'input/planillas/{f4_input_name}.txt')
+        f4 = pd.read_csv(f'input/planillas/{f4_name}', sep=';', dtype='object', error_bad_lines=False)
 
     # Limpieza del f4 
     shape_v1 = f4.shape  # Obtiene la dimensión del dataframe
 
     # Elimina las filas dos o menos valores no nulos
     vacias = f4[f4.isnull().sum(axis=1) >= (shape_v1[1]-2)]
-    vacias.to_csv(f'output/{dt_string}-f4-vacias.csv', sep=';')
     f4.dropna(thresh=2, inplace=True)
     n_vacias = shape_v1[0]-f4.shape[0]
 
@@ -77,7 +79,6 @@ def clean_f4():
 
     # Identifica los registros desplazados
     rd = f4[(~f4['Nro. Red. Inventario'].str.isdigit()) | (f4['Nro. Red. Inventario'].str.startswith('1'))]
-    rd.to_csv(f'output/{dt_string}-f4-desplazadas.csv', sep=';', index=False)
 
     # Ajusta los valores desplazados
     indice = rd.index
@@ -92,32 +93,33 @@ def clean_f4():
 
     # Extraer el F11
     f4['F11'] = f4.Destino.str.extract('([1]\d{7,})')  # Extrae el valor F11
-    f4.to_csv(f'output/{dt_string}-f4-output.csv', sep=';', index=False)
     num_fonces = f4['F11'].notna().sum()
-
     print(f'Se encontró: \n {n_vacias} filas con dos o menos valores no nulos \n {indice.shape[0]}  registros desplazados \n{num_fonces} registros con valores de F11')
+    
+    # Guardar los archivos 
+    vacias.to_csv(f'output/planillas/{dt_string}-f4-vacias.csv', sep=';')
+    rd.to_csv(f'output/planillas/{dt_string}-f4-desplazadas.csv', sep=';', index=False)
+    f4.to_csv(f'output/planillas/{dt_string}-f4-output.csv', sep=';', index=False)
 
-def clean_f5():
-    # Verificar para cada archivo 
-    num_f5_files = 4
-    f5_input_name = '210709_f5' # Prefijo del nombre del archivo 
-    #--------------------------------------------------------------
+def clean_f5(f5_input_name, num_f5_files):
     f5 = None 
     list_f5 = []
 
     # Si son varios archivos de F4s 
     if num_f5_files > 1: 
         for i in range(num_f5_files): 
-            f5_aux = pd.read_csv(f'input/{f5_input_name}_{i}.csv', sep=';', dtype='object', error_bad_lines=False)
+            f5_aux = pd.read_csv(f'input/planillas/{f5_input_name}_{i}.csv', sep=';', dtype='object', error_bad_lines=False)
             list_f5.append(f5_aux)
         f5 = pd.concat(list_f5, axis=0)
     else:
-        f5 = pd.read_csv(f'input/{f5_input_name}.csv', sep=';', dtype='object', error_bad_lines=False)
+        f5 = pd.read_csv(f'input/planillas/{f5_input_name}.csv', sep=';', dtype='object', error_bad_lines=False)
+    
+    # Guardar archivos
+    f5.to_csv(f'output/planillas/{dt_string}-f5-output.csv', sep=';', index=False)
     print('Guardado con éxito!')
-    f5.to_csv(f'output/{dt_string}-f5-output.csv', sep=';', index=False)
 
-def clean_kpi():
-    kpi = pd.read_excel('input/210712_kpi.xlsx', dtype='object')
+def clean_kpi(kpiname):
+    kpi = pd.read_excel(f'input/planillas/{kpiname}.xlsx', dtype='object')
     kpi = ct.norm_header(kpi)
     kpi.rename(columns={'index': 'ind'}, inplace=True)
     kpi.reset_index(inplace=True)
@@ -130,9 +132,14 @@ def clean_kpi():
     kpi.drop(index=td['index'].values, inplace=True)
     kpi.drop_duplicates(subset=['entrada'], inplace=True) # Agradado el 1 de junio para correcci{on }
 
-    du.to_csv(f'output/{dt_string}-du.csv', sep=';', decimal=',', index=False)
-    kpi.to_csv(f'output/{dt_string}-kpi.csv', sep=';', decimal=',', index=False)
+    # Guardar archivos 
+    du.to_csv(f'output/planillas/{dt_string}-kpi-du.csv', sep=';', decimal=',', index=False)
+    kpi.to_csv(f'output/planillas/{dt_string}-kpi-output.csv', sep=';', decimal=',', index=False)
     print('Guardado con éxito!')
+
+def excel_to_csv(filename, sheetname):
+    dbexcel = pd.read_excel(f'input/bases/{filename}.xlsx', sheet_name=sheetname, dtype='object')
+    dbexcel.to_csv(f'output/bases/{dt_string}-{filename}.csv', sep=';', index=False, encoding='utf-8') 
 
 
 # Menú de opciones 
@@ -141,21 +148,25 @@ print('1. Limpiar plantilla F3')
 print('2. Limpiar plantilla F4')
 print('3. Limpiar plantilla F5')
 print('4. Limpiar plantilla KPI')
-print('5. Limpiar F3, F4, F5 y KPI')
-selection_num = input('Seleccione una plantilla de F (1-5):')
+print('5. Convertir DB excel a csv')
+print('6. Obtener F3, F4, F5, KPI y DB')
+selection_num = input('Seleccione una plantilla de F (1-6):')
 
 if selection_num =='1': 
-    clean_f3()
+    clean_f3(f3_filename)
 elif selection_num =='2':
-    clean_f4()
+    clean_f4(f4_filename, f4_numfiles)
 elif selection_num =='3':
-    clean_f5()
+    clean_f5(f5_filename, f5_numfiles)
 elif selection_num =='4':
-    clean_kpi()
-elif selection_num == '5':
-    clean_f3()
-    clean_f4()
-    clean_f5()
-    clean_kpi()
+    clean_kpi(kpi_filename)
+elif selection_num== '5':
+    excel_to_csv(db_excelname, db_excelsheet)
+elif selection_num == '6':
+    clean_f3(f3_filename)
+    clean_f4(f4_filename, f4_numfiles)
+    clean_f5(f5_filename, f5_numfiles)
+    clean_kpi(kpi_filename)
+    excel_to_csv(db_excelname, db_excelsheet)
 else:
     print('Por favor seleccione una opción valida')

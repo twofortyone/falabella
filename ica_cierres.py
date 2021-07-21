@@ -29,7 +29,7 @@ class CierresF11:
                 self.ica.update_db(iokf3,'Comentario GCO', 'Coincidencia exacta F3+UPC+QTY')
                 df7 = df6[df6['descripcion6']=='confirmado']
                 df8= self.ica.get_diffvalue(df7, 'aaaa anulacion', yyyy, 'NAA', f'Registro con año de confirmación diferente a {yyyy}')
-                #self.ica.get_okk_dup(iokf3, 'Comentario GCO', 'F3+UPC+QTY')
+                self.ica.get_okk_dup(iokf3, 'Comentario GCO', 'F3+UPC+QTY')
                 self.ica.get_dup_i(iokf3, 'F3+UPC+QTY') # TODO llave como variable 
 
     def f4_verify(self, f4, status, yyyy):
@@ -46,7 +46,7 @@ class CierresF11:
                 iokf4 = df7[self.index_column].values
                 self.ica.update_db(iokf4,'GCO', 'OKK')
                 self.ica.update_db(iokf4,'Comentario GCO', 'Coincidencia exacta F4+UPC+QTY')
-                #self.ica.get_okk_dup(iokf4, 'Comentario GCO', 'F4+UPC+QTY')
+                self.ica.get_okk_dup(iokf4, 'Comentario GCO', 'F4+UPC+QTY')
                 self.ica.get_dup_i(iokf4, 'F4+UPC+QTY')
 
     def f5_verify(self, f5, status, yyyy, ):
@@ -65,7 +65,7 @@ class CierresF11:
                 iokf5 = df8[self.index_column].values
                 self.ica.update_db(iokf5, 'GCO','OKK')
                 self.ica.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY')
-                #self.ica.get_okk_dup(iokf5, 'Comentario GCO', 'F5+UPC+QTY')
+                self.ica.get_okk_dup(iokf5, 'Comentario GCO', 'F5+UPC+QTY')
                 self.ica.get_dup_i(iokf5, 'F5+UPC+QTY')
 
     def kpi_verify(self, kpi, status, yyyy, commenty):
@@ -87,7 +87,7 @@ class CierresF11:
             iokkpid = pgdimdyear[self.index_column].values
             self.ica.update_db(iokkpid,'GCO', 'OKK')
             self.ica.update_db(iokkpid,'Comentario GCO', 'Coincidencia exacta (F12|F11)')
-            #self.ica.get_okk_dup(iokkpid, 'Comentario GCO', '(F12|F11)')
+            self.ica.get_okk_dup(iokkpid, 'Comentario GCO', '(F12|F11)')
             self.ica.get_dup_i(iokkpid, '(F12|F11)')
 
     def refact_verify(self, refact, status):
@@ -102,12 +102,13 @@ class CierresF11:
         iokf12 = df5[self.index_column].values
         self.ica.update_db(iokf12,'GCO', 'OKK')
         self.ica.update_db(iokf12,'Comentario GCO', 'Coincidencia exacta F12')
-        #self.ica.get_okk_dup(iokf12, 'Comentario GCO', 'F12')
+        self.ica.get_okk_dup(iokf12, 'Comentario GCO', 'F12')
         self.ica.get_dup_i(iokf12, 'F12')
 
     def starting(self, cols):
         # verificar duplicidad en toda la base 
         self.ica.get_dup_all_db(cols)
+        self.ica.dupall()
         
     def finals(self):
         # verificar registros revisados
