@@ -7,7 +7,7 @@ select_var = ''
 
 def menu():
     print('-----------------------')
-    print(' ### Menú')
+    print(' ### Menú inicial')
     print('1. Obtener data')
     print('2. Cierres de F11s')
     print('3. Cierres de NC')
@@ -15,7 +15,7 @@ def menu():
 
 def menu_cl():
     print('  1. Limpiar data')
-    print('  2. Obtener data')
+    print('  2. Procesar data')
 
 def menu_cf11():
     print('  1. Cierres de F11 CD 2020')
