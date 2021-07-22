@@ -22,6 +22,7 @@ class InternalControlAnalysis:
     def get_okk_dup(self, rwos, cols, llave):
         aux = self.db.loc[rwos]
         aux = aux.loc[(aux['GCO']=='OKK')&(aux['gco_dupall']=='y')]
+        self.db.loc[aux[self.index_column].values, 'GCO'] = 'OKD'
         self.db.loc[aux[self.index_column].values, cols] = f'Coincidencia {llave} + Registro duplicado en DB'
 
     def get_dup_i(self, rwos, llave):
