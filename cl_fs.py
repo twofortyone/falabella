@@ -1,3 +1,4 @@
+import io
 import pandas as pd
 from datetime import datetime
 from cl_cleaning import CleaningText as ct 
@@ -6,30 +7,20 @@ from get_data import menu as mgd
 
 # Variables 
 dt_string = datetime.now().strftime('%y%m%d-%H%M')
-# Verificar para cada archivo  
-f3_filename = '210715_f3' 
-f4_numfiles = 2
-f4_filename = '210715_f4'
-f5_numfiles = 3
-f5_filename = '210716_f5_3000' # Prefijo del nombre del archivo 
-kpi_filename = '210716_kpi'
-db_excelname = '210712_cf11_tiendas_sac'
-db_excelsheet = 'Sheet1'
-#--------------------------------------------------------------
+config = open('cl_fs_config.txt', 'r', encoding='ISO-8859-1')
+clines = [line.strip() for line in config.readlines()]
 
 # Functions 
-def delete_initial_rows(text_file, fname):
+def delete_initial_rows(text_file):
     file = open(text_file, 'r', encoding='ISO-8859-1')
-    lines = file.readlines()
+    flines = file.readlines()[10:]
     file.close()
-    f = open(f'input/planillas/{fname}', 'w')
-    f.writelines(lines[10:])
-    f.close()
-    return fname
+    return flines
 
 def clean_f3(f3_input_name):
-    f3_name = delete_initial_rows(f'input/planillas/{f3_input_name}.txt', f'{dt_string}_f3.txt')
-    f3 = pd.read_csv(f'input/planillas/{f3_name}', sep=';', dtype='object', error_bad_lines=False)
+    f3_lines = delete_initial_rows(f'input/planillas/{f3_input_name}.txt')
+    f3 = pd.read_csv(io.StringIO("\n".join(f3_lines)), sep=';', dtype='object', error_bad_lines=False)
+    # TODO eliminar error_bad_lines cuando accesos directos a DB 
     a = f3.shape[0]
     # Obtener filas vacias 
     vacias = f3[f3['Fecha Reserva'].isna()] 
@@ -55,6 +46,7 @@ def clean_f3(f3_input_name):
     f3_path = f'output/planillas/{dt_string}-f3-output.csv'
     res.to_csv(f3_path, sep=';', index=False)
     print('-- Planilla F3 guardada con éxito!')
+    print(f'-- dir: {f3_path}')
     return f3_path
 
 def clean_f4(f4_input_name, num_f4_files):
@@ -63,13 +55,13 @@ def clean_f4(f4_input_name, num_f4_files):
     # Si son varios archivos de F4s 
     if num_f4_files > 1: 
         for i in range(num_f4_files): 
-            f4_name = delete_initial_rows(f'input/planillas/{f4_input_name}_{i}.txt', f'{dt_string}_f4_{i}.txt')
-            f4_aux = pd.read_csv(f'input/planillas/{f4_name}', sep=';', dtype='object', error_bad_lines=False)
+            f4_lines = delete_initial_rows(f'input/planillas/{f4_input_name}_{i}.txt')
+            f4_aux = pd.read_csv(io.StringIO("\n".join(f4_lines)), sep=';', dtype='object', error_bad_lines=False)
             list_f4.append(f4_aux)
         f4 = pd.concat(list_f4, axis=0)
     else:
-        f4_name = delete_initial_rows(f'input/planillas/{f4_input_name}.txt')
-        f4 = pd.read_csv(f'input/planillas/{f4_name}', sep=';', dtype='object', error_bad_lines=False)
+        f4_lines = delete_initial_rows(f'input/planillas/{f4_input_name}.txt')
+        f4 = pd.read_csv(io.StringIO("\n".join(f4_lines)), sep=';', dtype='object', error_bad_lines=False)
 
     # Limpieza del f4 
     shape_v1 = f4.shape  # Obtiene la dimensión del dataframe
@@ -107,6 +99,7 @@ def clean_f4(f4_input_name, num_f4_files):
     f4_path = f'output/planillas/{dt_string}-f4-output.csv'
     f4.to_csv(f4_path, sep=';', index=False)
     print('-- Planilla F4 guardada con éxito!')
+    print(f'-- dir: {f4_path}')
     return f4_path
 
 def clean_f5(f5_input_name, num_f5_files):
@@ -126,6 +119,7 @@ def clean_f5(f5_input_name, num_f5_files):
     f5_path = f'output/planillas/{dt_string}-f5-output.csv'
     f5.to_csv(f5_path, sep=';', index=False)
     print('-- Planilla F5 guardada con éxito!')
+    print(f'-- dir: {f5_path}')
     return f5_path
     
 
@@ -148,6 +142,7 @@ def clean_kpi(kpiname):
     kpi_path = f'output/planillas/{dt_string}-kpi-output.csv'
     kpi.to_csv(kpi_path, sep=';', decimal=',', index=False)
     print('-- Planilla kpi guardada con éxito!')
+    print(f'-- dir: {kpi_path}')
     return kpi_path
 
 def excel_to_csv(filename, sheetname):
@@ -155,6 +150,7 @@ def excel_to_csv(filename, sheetname):
     db_path = f'output/bases/{dt_string}-{filename}.csv'
     dbexcel.to_csv(db_path, sep=';', index=False, encoding='utf-8') 
     print('-- DB guardada con éxito!')
+    print(f'-- dir: {db_path}')
     return db_path
 
 
@@ -176,22 +172,22 @@ print('-------')
 selection_num = input('Seleccione una opción (1-6):')
 
 if selection_num =='1': 
-    clean_f3(f3_filename)
+    clean_f3(clines[0])
 elif selection_num =='2':
-    clean_f4(f4_filename, f4_numfiles)
+    clean_f4(clines[1], int(clines[2]))
 elif selection_num =='3':
-    clean_f5(f5_filename, f5_numfiles)
+    clean_f5(clines[3], int(clines[4]))
 elif selection_num =='4':
-    clean_kpi(kpi_filename)
+    clean_kpi(clines[5])
 elif selection_num== '5':
-    excel_to_csv(db_excelname, db_excelsheet)
+    excel_to_csv(clines[6], clines[7])
 elif selection_num == '6':
-    f3_path = clean_f3(f3_filename)
-    f4_path = clean_f4(f4_filename, f4_numfiles)
-    f5_path = clean_f5(f5_filename, f5_numfiles)
-    kpi_path = clean_kpi(kpi_filename)
+    f3_path = clean_f3(clines[0])
+    f4_path = clean_f4(clines[1], clines[2])
+    f5_path = clean_f5(clines[3], clines[4])
+    kpi_path = clean_kpi(clines[5])
     refact_path = 'input/init_data/210630_refact.csv'
-    db_path = excel_to_csv(db_excelname, db_excelsheet)
+    db_path = excel_to_csv(clines[6], clines[7])
 
     sp = input('Desea procesar la data? (y/n)')
     if sp =='y':
