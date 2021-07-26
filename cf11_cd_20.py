@@ -67,7 +67,7 @@ cols = [fcols[4],upc_column, qty_column]
 cierres.starting(cols)
 
 #cierres.f4_verify(f4, 'f4 de merma-2020', '2020')
-lista_f4_2021 = ['f4 en revision','cierre x f4 cobrado a terceros', 'f4 de merma', 'error en cierre de f11', 'error en creacion de f11','politica cambio agil','cierre x f4 dado baja crate prestamos']
+lista_f4_2021 = ['f4 en revision','cierre x f4 cobrado a terceros', 'f4 de merma', 'error en cierre de f11', 'error en creacion de f11','politica cambio agil','cierre x f4 dado baja crate prestamos', 'f4 de mermaf4 2020 cierre f11 2021']
 for status_nuevo in lista_f4_2021:
     cierres.f4_verify(f4, status_nuevo, '2021')
 
@@ -90,14 +90,14 @@ res = cf11.groupby([status_column,'GCO']).agg({cost_column:['sum', 'size']}).sor
 print(res)# Presenta todos los estados 
 
 def guardar():
-    cf11.to_excel(f'output/cierres_f11/{dt_string}-novedades-cf11s_cd_20.xlsx', sheet_name=f'{dt_string}_cf11_cd_20', index=False, encoding='utf-8') # Guarda el archivo 
+    cf11.to_excel(f'output/cierres_f11/cd/{dt_string}-cf11_cd_20-output.xlsx', sheet_name=f'{dt_string}_cf11_cd_20', index=False, encoding='utf-8') # Guarda el archivo 
     bdcia = cf11.merge(f3, how='left', left_on=[fcols[0],'prd_upc'], right_on=['nro_devolucion','upc'], validate='many_to_one')
     bdcia2 = bdcia.merge(f4, how='left',  left_on=[fcols[1],'prd_upc'], right_on=['nro_red_inventario','upc'],validate='many_to_one')
     bdcia3 = bdcia2.merge(f5, how='left', left_on=[fcols[2],'prd_upc'], right_on=['transfer','upc'], validate='many_to_one')
     bdcia4 = bdcia3.merge(kpi, how='left',left_on=[fcols[3]], right_on=['entrada'],validate='many_to_one')
     bdcia5 = bdcia4.merge(kpi, how='left',left_on=[fcols[4]], right_on=['entrada'],validate='many_to_one')
     #bdcia6 = bdcia4.merge(refact, how='left',left_on=[fcols[4]], right_on=['f12cod'],validate='many_to_one')
-    bdcia5.to_excel(f'output/cierres_f11/{dt_string}-nov-cf11s_cd_20-all.xlsx', sheet_name=f'{dt_string}_cf11_cd_20',index=False) 
+    bdcia5.to_excel(f'output/cierres_f11/cd/{dt_string}-cf11_cd_20-all.xlsx', sheet_name=f'{dt_string}_cf11_cd_20',index=False) 
 
 print('Desea guardar los resultados? (y/n)')
 save_res = input('//:')

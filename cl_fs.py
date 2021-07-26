@@ -7,7 +7,7 @@ from get_data import menu as mgd
 
 # Variables 
 dt_string = datetime.now().strftime('%y%m%d-%H%M')
-config = open('cl_fs_config.txt', 'r', encoding='ISO-8859-1')
+config = open('input/cl_fs_config.txt', 'r', encoding='ISO-8859-1')
 clines = [line.strip() for line in config.readlines()]
 
 # Functions 
@@ -46,7 +46,7 @@ def clean_f3(f3_input_name):
     f3_path = f'output/planillas/{dt_string}-f3-output.csv'
     res.to_csv(f3_path, sep=';', index=False)
     print('-- Planilla F3 guardada con éxito!')
-    print(f'-- dir: {f3_path}')
+    print(f'   dir: {f3_path}')
     return f3_path
 
 def clean_f4(f4_input_name, num_f4_files):
@@ -99,7 +99,7 @@ def clean_f4(f4_input_name, num_f4_files):
     f4_path = f'output/planillas/{dt_string}-f4-output.csv'
     f4.to_csv(f4_path, sep=';', index=False)
     print('-- Planilla F4 guardada con éxito!')
-    print(f'-- dir: {f4_path}')
+    print(f'   dir: {f4_path}')
     return f4_path
 
 def clean_f5(f5_input_name, num_f5_files):
@@ -119,7 +119,7 @@ def clean_f5(f5_input_name, num_f5_files):
     f5_path = f'output/planillas/{dt_string}-f5-output.csv'
     f5.to_csv(f5_path, sep=';', index=False)
     print('-- Planilla F5 guardada con éxito!')
-    print(f'-- dir: {f5_path}')
+    print(f'   dir: {f5_path}')
     return f5_path
     
 
@@ -142,7 +142,7 @@ def clean_kpi(kpiname):
     kpi_path = f'output/planillas/{dt_string}-kpi-output.csv'
     kpi.to_csv(kpi_path, sep=';', decimal=',', index=False)
     print('-- Planilla kpi guardada con éxito!')
-    print(f'-- dir: {kpi_path}')
+    print(f'   dir: {kpi_path}')
     return kpi_path
 
 def excel_to_csv(filename, sheetname):
@@ -150,7 +150,7 @@ def excel_to_csv(filename, sheetname):
     db_path = f'output/bases/{dt_string}-{filename}.csv'
     dbexcel.to_csv(db_path, sep=';', index=False, encoding='utf-8') 
     print('-- DB guardada con éxito!')
-    print(f'-- dir: {db_path}')
+    print(f'   dir: {db_path}')
     return db_path
 
 
@@ -183,10 +183,10 @@ elif selection_num== '5':
     excel_to_csv(clines[6], clines[7])
 elif selection_num == '6':
     f3_path = clean_f3(clines[0])
-    f4_path = clean_f4(clines[1], clines[2])
-    f5_path = clean_f5(clines[3], clines[4])
+    f4_path = clean_f4(clines[1], int(clines[2]))
+    f5_path = clean_f5(clines[3], int(clines[4]))
     kpi_path = clean_kpi(clines[5])
-    refact_path = 'input/init_data/210630_refact.csv'
+    refact_path = 'input/cierres_f11/cd/210712-211321-refact.csv'
     db_path = excel_to_csv(clines[6], clines[7])
 
     sp = input('Desea procesar la data? (y/n)')

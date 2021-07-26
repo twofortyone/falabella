@@ -85,7 +85,7 @@ res = c11t.groupby([status_column,'GCO']).agg({cost_column:['sum', 'size']}).sor
 print(res)# Presenta todos los estados 
 
 def guardar():
-    c11t.to_excel(f'output/cierres_f11/{dt_string}-cf11_tienda.xlsx', sheet_name=f'{dt_string}-cf11_tienda', index=False) # Guarda el archivo 
+    c11t.to_excel(f'output/cierres_f11/tienda/{dt_string}-cf11_tienda-output.xlsx', sheet_name=f'{dt_string}-cf11_tienda', index=False) # Guarda el archivo 
     # bdcia = c11t.merge(f3, how='left', left_on=[fcols[0],'prd_upc'], right_on=['nro_devolucion','upc'], validate='many_to_one')
     # bdcia2 = bdcia.merge(f4, how='left',  left_on=[fcols[1],'prd_upc'], right_on=['nro_red_inventario','upc'],validate='many_to_one')
     # bdcia3 = bdcia2.merge(f5, how='left', left_on=[fcols[2],'prd_upc'], right_on=['transfer','upc'], validate='many_to_one')

@@ -262,7 +262,12 @@ class InternalControlAnalysis:
         concept2 = 'registro duplicado en base de datos'
         sin_cat_dup = self.db[(self.db['status_nuevo']!= concept1)&(self.db['status_nuevo']!=concept2)]
         cat_dup = self.db[((self.db['status_nuevo']== concept1)|(self.db['status_nuevo']==concept2))]
-        self.db.loc[((self.db['status_nuevo']== concept1)|(self.db['status_nuevo']==concept2)), 'checked'] ='y'
+
+        self.db.loc[(((self.db['status_nuevo']== concept1)|(self.db['status_nuevo']==concept2))&(self.db['gco_dup']=='y')), 'GCO'] ='DUP'
+        self.db.loc[(((self.db['status_nuevo']== concept1)|(self.db['status_nuevo']==concept2))&(self.db['gco_dup']=='y')), 'Comentario GCO'] ='Duplicidad verificada F12+UPC+Cantidad'
+        self.db.loc[(((self.db['status_nuevo']== concept1)|(self.db['status_nuevo']==concept2))&(self.db['gco_dup']=='n')), 'GCO'] ='NDUP'
+        self.db.loc[(((self.db['status_nuevo']== concept1)|(self.db['status_nuevo']==concept2))&(self.db['gco_dup']=='n')), 'Comentario GCO'] ='Registro no duplicado F12+UPC+Cantidad'
+
         #sin_cat_dup = self.db[self.db['status_nuevo']!= concept1] # No es categoría dup
         #cat_dup = self.db[self.db['status_nuevo']== concept1] # Es categoría dup
 

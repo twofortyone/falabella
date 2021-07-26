@@ -131,7 +131,9 @@ class GetData():
         # Guardar archivos 
         print('Guardando archivos')
         for i in tqdm(range(len(self.lista))):
-            self.lista[i].to_csv(f'input/{folder}/{dt_string}-{self.names[i]}.csv', sep=';', index=False, encoding='utf-8') 
+            path = f'input/{folder}/{dt_string}-{self.names[i]}.csv'
+            self.lista[i].to_csv(path, sep=';', index=False, encoding='utf-8') 
+            print(path)
 
     def update_lists(self, name, colsreq, fnum, num, text):
         #self.lista.append(bd)
@@ -152,7 +154,7 @@ class GetData():
             cf11_20_text = ['xobservacion','estado_actual', 'status_nuevo']
             self.update_lists('cf11_cd_20', cf11_20_colsreq, cf11_20_fnum, cf11_20_num, cf11_20_text)
             self.get_data()
-            self.save_files('cierres_f11')
+            self.save_files('cierres_f11/cd')
 
         elif data_select=='2': # CF11s 2021 
             cf11_21_colsreq  = ['f11','f12', 'prd_upc', 'qproducto', 'xobservacion', 'costo_total', 'estado_actual', 'status_final', 'f3', 'f4', 'f5'] # Para cd 2021 
@@ -161,7 +163,7 @@ class GetData():
             cf11_21_text = ['xobservacion','estado', 'status_final']
             self.update_lists('cf11_cd_21', cf11_21_colsreq, cf11_21_fnum, cf11_21_num, cf11_21_text)
             self.get_data()
-            self.save_files('cierres_f11')
+            self.save_files('cierres_f11/cd')
 
         elif data_select =='3': # CF11s Tienda 2020 
             cf11_tienda_colsreq = ['nfolio','upc', 'estado', 'producto', 'qproducto', 'total_costo_promedio', 'f', 'f3', 'f4', 'motivo']
@@ -170,7 +172,7 @@ class GetData():
             cf11_tienda_text = ['motivo', 'estado']
             self.update_lists('cf11_tienda_20', cf11_tienda_colsreq, cf11_tienda_fnum, cf11_tienda_num, cf11_tienda_text)
             self.get_data()
-            self.save_files('cierres_f11')
+            self.save_files('cierres_f11/tienda')
 
         elif data_select == '4': # Cierres NCs 
             cnc_colsreq = ['cod_aut_nc', 'local_trx', 'terminal', 'local_ant', 'upc', 'ct', 'cantidad_trx_actual', 'tipo_nc', 'f3', 'f4','f5', 'f11', 'esmc', 'tipmc']        
