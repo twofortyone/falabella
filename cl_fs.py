@@ -9,6 +9,7 @@ from get_data import menu as mgd
 dt_string = datetime.now().strftime('%y%m%d-%H%M')
 config = open('input/cl_fs_config.txt', 'r', encoding='ISO-8859-1')
 clines = [line.strip() for line in config.readlines()]
+config.close()
 
 # Functions 
 def delete_initial_rows(text_file):
@@ -186,7 +187,7 @@ elif selection_num == '6':
     f4_path = clean_f4(clines[1], int(clines[2]))
     f5_path = clean_f5(clines[3], int(clines[4]))
     kpi_path = clean_kpi(clines[5])
-    refact_path = 'input/cierres_f11/cd/210712-211321-refact.csv'
+    refact_path = clines[8]
     db_path = excel_to_csv(clines[6], clines[7])
 
     sp = input('Desea procesar la data? (y/n)')
