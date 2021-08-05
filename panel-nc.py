@@ -19,20 +19,23 @@ import dash_table
 import dash_table.FormatTemplate as FormatTemplate
 from dash_table.Format import Sign
 from collections import OrderedDict
+import dash_bootstrap_components as dbc
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = [dbc.themes.BOOTSTRAP]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 # assume you have a "long-form" data frame
 # see https://plotly.com/python/px-arguments/ for more options
-df = pd.read_csv('input/panel/210713-nc.csv', sep=';', dtype='object')
+df = pd.read_csv('output/bases/210726-1027-210713_panel_nc.csv', sep=';', dtype='object')
 
 df['F_COMPRA'] = pd.to_datetime(df['F_COMPRA'])
 df['F_COMPRA_ANT'] = pd.to_datetime(df['F_COMPRA_ANT'])
 
 df.loc[:,'CANT'] = -pd.to_numeric(df['CANT'])
 df.loc[:,'TOTAL_COSTO'] = pd.to_numeric(df['TOTAL_COSTO'])
+
+df['NLOCAL_CREACION'] = df['NLOCAL_CREACION'].astype('category')
 
 df['MES_NC'] = df['F_COMPRA'].dt.strftime('%b')
 df['MES_COMPRA'] = df['F_COMPRA_ANT'].dt.strftime('%b')
@@ -43,45 +46,46 @@ dftiendas = dftiendas1.groupby(['NLOCAL_CREACION','MES_NC']).agg({'CANT':'sum','
 meses = sorted(dftiendas['MES_NC'].unique(), key=lambda m: datetime.strptime(m, "%b"))
 fig = px.scatter(dftiendas, y="TOTAL_COSTO", x="CAUTORIZA", hover_data=['NLOCAL_CREACION'])
 
-app.layout = html.Div(children=[
-    html.H1(children='Falabella'),
-
-    html.Div(children='''
-        Reporte Notas Crédito
-    '''),
-
-    html.Div([  
-    
-    html.Div([
-        dcc.Graph(
-            id='example-graph',
-            hoverData={'points': [{'customdata': 'COLINA'}]}
-        )
-    ], style={'width': '49%'}),
-
-   html.Div(dcc.Slider(
+graphs_local_months =  html.Div(
+    [dcc.Graph(
+        id='example-graph',
+        hoverData={'points': [{'customdata': 'COLINA'}]}),
+    dcc.Slider(
         id='crossfilter-month--slider',
         min=0,
         max= len(meses)-1,
         value= len(meses)-1,
         marks={str(value): str(month) for value,month  in enumerate(meses)},
-        step=None
-    ), style={'width': '49%', 'padding': '0px 20px 20px 20px'}),
+        step=None)
+    ])
 
-    html.Div(
-        dash_table.DataTable(
-            id='tabla',
-            columns=[{"name": i, "id": i} for i in dftiendas.columns],
-            page_current=0,
-            page_size=10,
-            page_action='custom',
-            #filter_action='custom',
-            #filter_query=''
-        ),
-        style={'width': '49%'}),
+table_local_months =  dash_table.DataTable(
+                id='tabla',
+                columns=[{"name": i, "id": i} for i in dftiendas.columns],
+                page_current=0,
+                page_size=10,
+                page_action='custom',
+                #filter_action='custom',
+                #filter_query=''
+                )
 
-    ]),
-])
+
+app.layout = dbc.Container([
+    html.H1(children='Falabella'),
+    html.P('Reporte Notas Crédito'), 
+    html.Hr(),
+
+    dbc.Row([
+        dbc.Col(graphs_local_months, md=7),
+        dbc.Col(table_local_months, md=5)
+    ]), 
+    html.Hr(),
+    dbc.Row([
+
+    ])
+], 
+fluid=True
+)
 
 @app.callback(
     dash.dependencies.Output('example-graph', 'figure'),

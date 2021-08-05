@@ -157,7 +157,7 @@ class GetData():
             self.save_files('cierres_f11/cd')
 
         elif data_select =='3': # CF11s Tienda 2020 
-            cf11_tienda_colsreq = ['nfolio','prd_upc', 'estado', 'producto', 'qproducto', 'total_costo_promedio', 'f', 'motivo']
+            cf11_tienda_colsreq = ['nfolio','prd_upc', 'estado_f11', 'producto', 'qproducto', 'total_costo_promedio', 'f', 'motivo']
             cf11_tienda_fnum = ['nfolio', 'prd_upc', 'f']
             cf11_tienda_num = [ 'qproducto', 'total_costo_promedio'] 
             cf11_tienda_text = ['motivo']

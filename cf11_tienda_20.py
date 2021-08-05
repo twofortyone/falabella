@@ -23,8 +23,8 @@ index_name = 'indice_c11t'
 cost_column = 'total_costo_promedio'
 status_column = 'motivo'
 qty_column = 'qproducto'
-upc_column = 'upc'
-fcols = ['f3','f4','f','nfolio','f']
+upc_column = 'prd_upc'
+fcols = ['f','f','f','nfolio','f']
 fcolaux = ['f', 'nfolio']
 
 # Generar indice en columna
@@ -85,19 +85,21 @@ res = c11t.groupby([status_column,'GCO']).agg({cost_column:['sum', 'size']}).sor
 print(res)# Presenta todos los estados 
 
 def guardar():
-    c11t.to_excel(f'output/cierres_f11/tienda/{dt_string}-cf11_tienda-output.xlsx', sheet_name=f'{dt_string}-cf11_tienda', index=False) # Guarda el archivo 
+    path = f'output/cierres_f11/tienda/{dt_string}-cf11_tienda-output.xlsx'
+    c11t.to_excel(path, sheet_name=f'{dt_string}-cf11_tienda', index=False) # Guarda el archivo 
     # bdcia = c11t.merge(f3, how='left', left_on=[fcols[0],'prd_upc'], right_on=['nro_devolucion','upc'], validate='many_to_one')
     # bdcia2 = bdcia.merge(f4, how='left',  left_on=[fcols[1],'prd_upc'], right_on=['nro_red_inventario','upc'],validate='many_to_one')
     # bdcia3 = bdcia2.merge(f5, how='left', left_on=[fcols[2],'prd_upc'], right_on=['transfer','upc'], validate='many_to_one')
     # bdcia4 = bdcia3.merge(kpi, how='left',left_on=[fcols[3]], right_on=['entrada'],validate='many_to_one')
     # bdcia5 = bdcia4.merge(refact, how='left',left_on=[fcols[4]], right_on=['f12cod'],validate='many_to_one')
     # bdcia4.to_csv(f'output/{dt_string}-novedades-cierref11-all.csv', sep=';', index=False) 
+    return path
  
 print('Desea guardar los resultados? (y/n)')
 save_res = input('//:')
 
 if save_res=='y':
-    guardar()
-    print(f'Guardado como: {dt_string}-novedades-cf11s_cd_20.xlsx')
+    path = guardar()
+    print(f'Guardado en: {path}')
 else:
     print('Ok')

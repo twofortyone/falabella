@@ -121,6 +121,10 @@ class CierresNC:
         else: 
             return nil 
     
+    def direc2(self):
+        df1 = self.db[(self.df[self.pcols[0]=='se asocia'])&(self.db['esmc']=='cerrado')]
+        
+    
     def starting(self, cols):
         # verificar duplicidad en toda la base 
         self.ica.get_dup_all_db(cols)
