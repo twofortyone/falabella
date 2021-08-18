@@ -2,7 +2,7 @@ import pandas as pd
 from datetime import datetime
 from ica_nc import CierresNC
 from tqdm import tqdm
-import input.tipmc as intip
+#import input.tipmc as intip
 
 pd.set_option('float_format', '{:,.2f}'.format)
 pd.set_option('display.max_columns', 70)
@@ -18,10 +18,10 @@ tiendas = ['139','141','142','143','5','37','35','43','53','36','38','98','138',
 # TODO Check values 
 index_name = 'indice_f5'
 cost_column = 'ct'
-status_column = 'tipificacion_final'
+status_column = 'tipmc'
 qty_column = 'cantidad_trx_actual'
 upc_column = 'upc'
-fcols = ['f3','f4','f5','f11', '', 'cod_aut_nc']
+fcols = ['f3','f4','f5','f11', 'f12', 'cod_aut_nc']
 # --------------------------------------------------------------------------------------------
 # Cargar data
 data = []
@@ -59,43 +59,51 @@ newcolsf5 = ['aaaa reserva', 'aaaa envio', 'aaaa recep']
 f5[newcolsf5] = f5[colsf5].apply(lambda x: x.str.extract('(\d{4})', expand=False))
 
 f4['aa creacion'] = f4['fecha_creacion'].str.split('-').str[2]
+
+colsf3 = ['fecha_reserva', 'fecha_envio', 'fecha_anulacion','fecha_confirmacion']
+newcolsf3 = ['aaaa reserva', 'aaaa envio', 'aaaa anulacion','aaaa confirmacion']
+f3[newcolsf3] = f3[colsf3].apply(lambda x: x.str.extract('(\d{4})', expand=False))
+
+# Convertir columnas a fecha 
+kpi['fecha_paletiza'] = pd.to_datetime(kpi['fecha_paletiza'])
+
 # TODO ---- revisar hasta aquí 
 
 # Inicio de análisis de cierres 
-cerrado = nc[nc['estado_final']=='cerrado']
+cerrado = nc[nc['esmc']=='cerrado']
 cierres_nc = CierresNC(nc, index_name)
 cierres_nc.set_fcols(fcols, [status_column, upc_column, cost_column, qty_column])
 #TODO fix f12 number in f4_verify
 
-lista_tipmc_f5 = [ 'con mc asociada','con ro asociado','compensacion con ct verde', 'con quiebre asociado', 'f5 en revision','se asocia f11-conciliacion con transportadora',
-'con f11 tipo cliente asociado','se asocia f3-devuelto a proveedor','compensa con local de ventaanulado x user', 'f12 en digitado sin salida']
-
-print('Análisis F5s')
-for tipo in tqdm(lista_tipmc_f5):
-    cierres_nc.f5_verify(f5, tipo, '2021', 'cod_aut_nc')
-
-lista_tipm_f4 = [ 'se asocia f4 dado de baja por producto entregado a cliente', 'se asocia f4 por producto no ubicado','se asocia f4-baja de inventario-menaje', 'baja con cargo a linea por costos', 'baja con cargo a dependencia por politicasdefiniciones', ]
+# Validación B6
+cierres_nc.f5_verify_20(f5, '2021', 'cod_aut_nc')
+lista_tipm_f4 = ['se asocia f4 dado de baja por producto entregado a cliente','se asocia f4 por producto no ubicado','se asocia f4-baja de inventario-menaje']
 print('Análisis F4s')
 for tipo2 in tqdm(lista_tipm_f4):
-    cierres_nc.f4_verify(f4, tipo2, '2021')
+    cierres_nc.f4_verify_20_b6(f4, tipo2, '2021')
 
-cierres_nc.f5_verify_local(f5, 'compensacion con dvd administrativo', '2021', 'cod_aut_nc', '3001')
-print('cts ------------------------------------------------------------')
-nil = cierres_nc.f5_verify_local_list(f5, 'compensacion con ct ciudades', '2021', 'cod_aut_nc', 'CTs',cts)
-print(nil)
-print('preventas ------------------------------------------------------------')
-nil = cierres_nc.f5_verify_local_list(f5,'compensacion con preventas', '2021', 'cod_aut_nc', 'preventas',preventas)
-print(nil)
-print('tiendas ------------------------------------------------------------')
-nil = cierres_nc.f5_verify_local_list(f5,'compensacion con tienda', '2021', 'cod_aut_nc', 'tiendas ',tiendas)
-print(nil)
+# Validación B2345
+cierres_nc.f3_verify_20(f3, 'f3 devuelto a proveedor', '2021')
+
+lista_tipm_f4 = ['f4 de merma', 'f4 cobrado a terceros' ]
+print('Análisis F4s')
+for tipo2 in tqdm(lista_tipm_f4):
+    cierres_nc.f4_verify_20(f4, tipo2, '2021')
+
+cierres_nc.kpi_verify_20_2435(kpi, '2021', 'Recibido con fecha anterior al 21/01/2021')
+
+# Validación B1 
+cierres_nc.refact_verify_20(refact)
+
+# Validación B7
+cierres_nc.kpi_verify_20(kpi, '2021', 'Recibido con fecha anterior al 21/01/2021')
 
 nc = cierres_nc.get_db()
 nc.loc[nc['GCO'].notna(), 'checked'] = 'y'
 nc.loc[nc['GCO'].isna(), 'checked'] = 'n'
 
 # Identificar duplicados en toda la base 
-du = nc[nc.duplicated(['cod_aut_nc', 'local_trx','upc', 'cantidad_trx_actual'], keep=False)]
+du = nc[nc.duplicated(['cod_aut_nc', 'upc', 'cantidad_trx_actual'], keep=False)]
 idu = du[index_name].values
 nc.loc[idu, 'DUP'] = 'Y'
 nc.loc[nc['DUP'].isna(), 'DUP'] = 'N'
@@ -120,6 +128,6 @@ save_res = input('//:')
 
 if save_res=='y':
     path = guardar()
-    print(f'Guardado en: {path}')
+    print(f'Guardado como: {path}')
 else:
     print('Ok')
