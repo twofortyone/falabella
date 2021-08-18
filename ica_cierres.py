@@ -108,7 +108,7 @@ class CierresF11:
     def starting(self, cols):
         # verificar duplicidad en toda la base 
         self.ica.get_dup_all_db(cols)
-        self.ica.dupall()
+        self.ica.dupall(self.pcols[0])
         
     def finals(self):
         # verificar registros revisados

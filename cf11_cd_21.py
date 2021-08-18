@@ -68,7 +68,7 @@ cols = [fcols[4],upc_column, qty_column]
 cierres.starting(cols)
 
 #cierres.f4_verify(f4, 'f4 de merma-2020', '2020')
-lista_f4_2021 = ['f4 en revision','cierre x f4 cobrado a terceros', 'f4 de merma', 'error en cierre de f11', 'error en creacion de f11','politica cambio agil','cierre x f4 dado baja crate prestamos']
+lista_f4_2021 = ['f4 en revision','cierre x f4 cobrado a terceros', 'f4 de merma', 'error en cierre de f11', 'error en creacion de f11'] 
 for status_nuevo in lista_f4_2021:
     cierres.f4_verify(f4, status_nuevo, '2021')
 
@@ -98,13 +98,15 @@ def guardar():
     bdcia4 = bdcia3.merge(kpi, how='left',left_on=[fcols[3]], right_on=['entrada'],validate='many_to_one')
     bdcia5 = bdcia4.merge(kpi, how='left',left_on=[fcols[4]], right_on=['entrada'],validate='many_to_one')
     #bdcia5 = bdcia4.merge(refact, how='left',left_on=[fcols[4]], right_on=['f12cod'],validate='many_to_one')
-    bdcia5.to_excel(f'output/cierres_f11/cd/{dt_string}-cf11_cd_21-all.xlsx', sheet_name=f'{dt_string}_cf11_cd_21', index=False) 
+    path = f'output/cierres_f11/cd/{dt_string}-cf11_cd_21-all.xlsx'
+    bdcia5.to_excel(path, sheet_name=f'{dt_string}_cf11_cd_21', index=False) 
+    return path
  
 print('Desea guardar los resultados? (y/n)')
 save_res = input('//:')
 
 if save_res=='y':
-    guardar()
-    print(f'Guardado como: {dt_string}-novedades-cf11s_cd_20.xlsx')
+    path = guardar()
+    print(f'Guardado en: {path}')
 else:
     print('Ok')

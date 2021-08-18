@@ -251,25 +251,25 @@ class InternalControlAnalysis:
         return bdquery_res, list(notinlist3['local_recep'])
     
         #-----------------------------------------------------
-    def dupall(self):
+    def dupall(self, status):
         # 30 de junio de 2021 
         # Comparar duplicados con los de michael 
         # TODO  pasar a método 
         dup_cols = ['f12', 'prd_upc']
-        redcols = ['f12', 'prd_upc','status_nuevo']
+        redcols = ['f12', 'prd_upc',status]
 
         concept1 = 'cierre x duplicidad (f11 con mismo f12+sku+cantidad)'
         concept2 = 'registro duplicado en base de datos'
-        sin_cat_dup = self.db[(self.db['status_nuevo']!= concept1)&(self.db['status_nuevo']!=concept2)]
-        cat_dup = self.db[((self.db['status_nuevo']== concept1)|(self.db['status_nuevo']==concept2))]
+        sin_cat_dup = self.db[(self.db[status]!= concept1)&(self.db[status]!=concept2)]
+        cat_dup = self.db[((self.db[status]== concept1)|(self.db[status]==concept2))]
 
-        self.db.loc[(((self.db['status_nuevo']== concept1)|(self.db['status_nuevo']==concept2))&(self.db['gco_dup']=='y')), 'GCO'] ='DUP'
-        self.db.loc[(((self.db['status_nuevo']== concept1)|(self.db['status_nuevo']==concept2))&(self.db['gco_dup']=='y')), 'Comentario GCO'] ='Duplicidad verificada F12+UPC+Cantidad'
-        self.db.loc[(((self.db['status_nuevo']== concept1)|(self.db['status_nuevo']==concept2))&(self.db['gco_dup']=='n')), 'GCO'] ='NDUP'
-        self.db.loc[(((self.db['status_nuevo']== concept1)|(self.db['status_nuevo']==concept2))&(self.db['gco_dup']=='n')), 'Comentario GCO'] ='Registro no duplicado F12+UPC+Cantidad'
+        self.db.loc[(((self.db[status]== concept1)|(self.db[status]==concept2))&(self.db['gco_dup']=='y')), 'GCO'] ='DUP'
+        self.db.loc[(((self.db[status]== concept1)|(self.db[status]==concept2))&(self.db['gco_dup']=='y')), 'Comentario GCO'] ='Duplicidad verificada F12+UPC+Cantidad'
+        self.db.loc[(((self.db[status]== concept1)|(self.db[status]==concept2))&(self.db['gco_dup']=='n')), 'GCO'] ='NDUP'
+        self.db.loc[(((self.db[status]== concept1)|(self.db[status]==concept2))&(self.db['gco_dup']=='n')), 'Comentario GCO'] ='Registro no duplicado F12+UPC+Cantidad'
 
-        #sin_cat_dup = self.db[self.db['status_nuevo']!= concept1] # No es categoría dup
-        #cat_dup = self.db[self.db['status_nuevo']== concept1] # Es categoría dup
+        #sin_cat_dup = self.db[self.db[status]!= concept1] # No es categoría dup
+        #cat_dup = self.db[self.db[status]== concept1] # Es categoría dup
 
         cat_dup_mas_gco = cat_dup.loc[cat_dup['gco_dup']=='y'] # Duplicados para MC y GCO
 

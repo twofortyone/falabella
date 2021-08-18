@@ -97,13 +97,15 @@ def guardar():
     bdcia4 = bdcia3.merge(kpi, how='left',left_on=[fcols[3]], right_on=['entrada'],validate='many_to_one')
     bdcia5 = bdcia4.merge(kpi, how='left',left_on=[fcols[4]], right_on=['entrada'],validate='many_to_one')
     #bdcia6 = bdcia4.merge(refact, how='left',left_on=[fcols[4]], right_on=['f12cod'],validate='many_to_one')
-    bdcia5.to_excel(f'output/cierres_f11/cd/{dt_string}-cf11_cd_20-all.xlsx', sheet_name=f'{dt_string}_cf11_cd_20',index=False) 
+    path = f'output/cierres_f11/cd/{dt_string}-cf11_cd_20-all.xlsx'
+    bdcia5.to_excel(path, sheet_name=f'{dt_string}_cf11_cd_20',index=False) 
+    return path
 
 print('Desea guardar los resultados? (y/n)')
 save_res = input('//:')
 
 if save_res=='y':
-    guardar()
-    print(f'Guardado como: {dt_string}-nov-cf11s_cd_20.xlsx')
+    path = guardar()
+    print(f'Guardado en: {path}')
 else:
     print('Ok')
