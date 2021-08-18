@@ -49,7 +49,7 @@ while select_var!='exit':
             print('    Por favor seleccione una opción valida!')
 
     elif select_var=='3':
-        print('3. Cierres de NC')
+        exec(open('cierres_nc_cd.py').read())
     elif select_var=='exit':
         print('# Hasta luego!')
     else:

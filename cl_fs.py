@@ -148,7 +148,7 @@ def clean_kpi(kpiname):
 
 def excel_to_csv(filename, sheetname):
     dbexcel = pd.read_excel(f'input/bases/{filename}.xlsx', sheet_name=sheetname, dtype='object')
-    db_path = f'output/bases/{dt_string}-{filename}.csv'
+    db_path = f'output/bases/{dt_string}-{filename}-output.csv'
     dbexcel.to_csv(db_path, sep=';', index=False, encoding='utf-8') 
     print('-- DB guardada con éxito!')
     print(f'   dir: {db_path}')

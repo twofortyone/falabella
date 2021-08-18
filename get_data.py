@@ -139,10 +139,10 @@ class GetData():
     def run_gd(self, data_select):
         # Data aggregation 
         if data_select=='1': # CF11s CD 2020 
-            cf11_20_colsreq  = ['nfolio','f12', 'prd_upc', 'qproducto', 'xobservacion', 'total_costo_promedio', 'estado_actual', 'status_nuevo', 'f3nuevo', 'f4_nuevo', 'nuevo_f11', 'f5', 'reporte_a_contabilidad', 'movimiento_contable', 'nc', 'tranf_electro_factura', 'pv'] # Para cd 2020 
-            cf11_20_fnum = ['nfolio','f12', 'prd_upc', 'f3nuevo', 'f4_nuevo', 'nuevo_f11', 'f5']
+            cf11_20_colsreq  = ['nfolio','f12', 'prd_upc', 'qproducto', 'xobservacion', 'total_costo_promedio', 'estado_actual', 'status_nuevo', 'f3nuevo', 'f4_nuevo', 'f5', 'reporte_a_contabilidad', 'movimiento_contable', 'nc', 'tranf_electro_factura', 'pv', 'transportadora_nuevo'] # Para cd 2020 
+            cf11_20_fnum = ['nfolio','f12', 'prd_upc', 'f3nuevo', 'f4_nuevo', 'f5']
             cf11_20_num = [ 'qproducto', 'total_costo_promedio']
-            cf11_20_text = ['xobservacion','estado_actual', 'status_nuevo']
+            cf11_20_text = ['xobservacion','estado_actual', 'status_nuevo',  'reporte_a_contabilidad', 'movimiento_contable', 'nc', 'tranf_electro_factura', 'pv', 'transportadora_nuevo']
             self.update_lists('cf11_cd_20', cf11_20_colsreq, cf11_20_fnum, cf11_20_num, cf11_20_text)
             self.get_data()
             self.save_files('cierres_f11/cd')
@@ -151,7 +151,7 @@ class GetData():
             cf11_21_colsreq  = ['f11','f12', 'prd_upc', 'qproducto', 'xobservacion', 'costo_total', 'estado_actual', 'status_final', 'f3', 'f4', 'f5'] # Para cd 2021 
             cf11_21_fnum = ['f11','f12', 'prd_upc', 'f3', 'f4', 'f5']
             cf11_21_num = [ 'qproducto', 'costo_total'] 
-            cf11_21_text = ['xobservacion','estado', 'status_final']
+            cf11_21_text = ['xobservacion', 'status_final']
             self.update_lists('cf11_cd_21', cf11_21_colsreq, cf11_21_fnum, cf11_21_num, cf11_21_text)
             self.get_data()
             self.save_files('cierres_f11/cd')
@@ -166,10 +166,10 @@ class GetData():
             self.save_files('cierres_f11/tienda')
 
         elif data_select == '4': # Cierres NCs 
-            cnc_colsreq = ['cod_aut_nc', 'local_trx', 'terminal', 'local_ant', 'upc', 'ct', 'cantidad_trx_actual', 'tipo_nc', 'f3', 'f4','f5', 'f11', 'esmc', 'tipmc']        
-            cnc_fnum = ['cod_aut_nc','local_trx', 'terminal', 'local_ant', 'upc', 'f3', 'f4', 'f5', 'f11']
+            cnc_colsreq = ['cod_aut_nc', 'local_trx', 'terminal', 'local_ant', 'upc', 'ct', 'cantidad_trx_actual', 'tipo_nc', 'f3', 'f4','f5', 'f11', 'estado_final', 'tipificacion_final', 'sku', 'source','f12']    # 'sku', 'source','f12' de 2020    
+            cnc_fnum = ['cod_aut_nc', 'upc', 'f3', 'f4', 'f5', 'f11','local_trx', 'terminal', 'local_ant',] # 'local_trx', 'terminal', 'local_ant', de 2021
             cnc_num = [ 'ct', 'cantidad_trx_actual'] 
-            cnc_text = ['esmc', 'tipmc']
+            cnc_text = ['estado_final', 'tipificacion_final']
             self.update_lists('cierres_nc', cnc_colsreq, cnc_fnum, cnc_num, cnc_text)
             self.get_data()
             self.save_files('cierres_nc')
