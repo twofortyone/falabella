@@ -42,7 +42,8 @@ class CleaningText:
         return res 
 
     def clean_fnum(col):
-        res = col.str.replace(r'([^0-9])', '', regex=True)
+        res = col.fillna('nan')
+        res = res.str.replace(r'([^0-9])', '', regex=True)
         # Si f = 0 => nan 
         res.loc[res=='0'] = np.nan
         # Si f no es dígito => nan 

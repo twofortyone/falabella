@@ -3,7 +3,6 @@ import pandas as pd
 from datetime import datetime
 from cl_cleaning import CleaningText as ct 
 from get_data import GetData
-from get_data import menu as mgd
 
 # Variables 
 dt_string = datetime.now().strftime('%y%m%d-%H%M')
@@ -23,29 +22,52 @@ def clean_f3(f3_input_name):
     f3 = pd.read_csv(io.StringIO("\n".join(f3_lines)), sep=';', dtype='object', error_bad_lines=False)
     # TODO eliminar error_bad_lines cuando accesos directos a DB 
     a = f3.shape[0]
+
+    f3 = ct.norm_header(f3) # Normalizar encabezado 
+    
     # Obtener filas vacias 
-    vacias = f3[f3['Fecha Reserva'].isna()] 
-    f3 = f3[f3['Fecha Reserva'].notna()] 
+    vacias = f3[f3['fecha_reserva'].isna()] 
+    f3 = f3[f3['fecha_reserva'].notna()] 
     
     desplazadas = f3[f3.isna().sum(axis=1) >= f3.shape[1]-2]
     indice_des = desplazadas.index
     # Actualiza los valores de F11 desplazados
     for i in indice_des:
-        f3.loc[i-1,'NC Proveedor':'Folio F11'] = f3.loc[i,'Nro Devolucion':'Fecha Reserva'].values
+        f3.loc[i-1,'nc_proveedor':'folio_f11'] = f3.loc[i,'nro_devolucion':'fecha_reserva'].values
 
     print(f'   {vacias.shape[0]} registros de F11s vacios')
     print(f'   {desplazadas.shape[0]} registros de F11s desplazados')
     res1 = f3[~f3.index.isin(indice_des)]
     
     #print(list(indice_des.isin(f3.index)))
-    res = f3[f3.isna().sum(axis=1) < f3.shape[1]-2]
+    f3 = f3[f3.isna().sum(axis=1) < f3.shape[1]-2]
     #print(res1[~res1.index.isin(res.index)])
     #print(res.shape)
-    print(f'   Se actualizaron {a-res.shape[0]} registros')
+
+    # -------------------------------------------------------
+    # Revisar info
+    # -------------------------------------------------------
+    text_cols = ['nro_devolucion', 'tipo_producto', 'descripcion', 'marca', 'subclase',
+       'descripcion1', 'clase', 'descripcion2', 'sublinea', 'descripcion3', 'linea', 
+       'descripcion4','proveedor', 'descripcion5', 'descripcion6', 'tipo_documento_para_dev',
+       'usuario_que_confirma', 'nc_proveedor']
+
+    fnum_cols = ['nro_guia', 'upc', 'sku', 'rut_proveedor', 'local', 'estado', 'folio_f11', 'folio_f12' ]
+
+    num_cols = [ 'cantidad', 'cant*costo', 'cant*costoprmd', 'diferencia', 'cant*precio']
+    
+    date_cols = [ 'fecha_reserva', 'fecha_envio', 'fecha_anulacion','fecha_confirmacion']
+
+    f3.loc[:, text_cols] = f3.loc[:, text_cols].apply(ct.clean_str)
+    f3.loc[:, fnum_cols] = f3.loc[:, fnum_cols].apply(ct.clean_fnum)
+    f3.loc[:, num_cols] = f3.loc[:, num_cols].apply(ct.clean_num)
+
+    # Save file 
+    print(f'   Se actualizaron {a-f3.shape[0]} registros')
     vacias.to_csv(f'output/planillas/{dt_string}-f3-vacias.csv', sep=';', index=False)
     desplazadas.to_csv(f'output/planillas/{dt_string}-f3-desplazadas.csv', sep=';', index=False)
     f3_path = f'output/planillas/{dt_string}-f3-output.csv'
-    res.to_csv(f3_path, sep=';', index=False)
+    f3.to_csv(f3_path, sep=';', index=False)
     print('-- Planilla F3 guardada con éxito!')
     print(f'   dir: {f3_path}')
     return f3_path
@@ -64,7 +86,9 @@ def clean_f4(f4_input_name, num_f4_files):
         f4_lines = delete_initial_rows(f'input/planillas/{f4_input_name}.txt')
         f4 = pd.read_csv(io.StringIO("\n".join(f4_lines)), sep=';', dtype='object', error_bad_lines=False)
 
-    # Limpieza del f4 
+    
+    f4 = ct.norm_header(f4) # Normalizar encabezado 
+    
     shape_v1 = f4.shape  # Obtiene la dimensión del dataframe
 
     # Elimina las filas dos o menos valores no nulos
@@ -72,27 +96,46 @@ def clean_f4(f4_input_name, num_f4_files):
     f4.dropna(thresh=2, inplace=True)
     n_vacias = shape_v1[0]-f4.shape[0]
 
-    # Identifica las entradas en Nro. Red. Inventario nulas y reemplazar por texto
-    f4['Nro. Red. Inventario'].fillna('N/A', inplace=True)
+    # Identifica las entradas en nro_red_inventario nulas y reemplazar por texto
+    f4['nro_red_inventario'].fillna('N/A', inplace=True)
 
     # Identifica los registros desplazados
-    rd = f4[(~f4['Nro. Red. Inventario'].str.isdigit()) | (f4['Nro. Red. Inventario'].str.startswith('1'))]
+    rd = f4[(~f4['nro_red_inventario'].str.isdigit()) | (f4['nro_red_inventario'].str.startswith('1'))]
 
     # Ajusta los valores desplazados
     indice = rd.index
     faux = f4.copy()
 
     for i in indice:
-        f4.loc[i-1, 'Destino':'Total Precio Costo'] = faux.loc[i,'Nro. Red. Inventario':'Linea'].values
+        f4.loc[i-1, 'destino':'total_precio_costo'] = faux.loc[i,'nro_red_inventario':'linea'].values
 
-    f4[f4['Nro. Red. Inventario'].isna()].to_csv(f'output/planillas/{dt_string}-f4-error.csv', sep=';', index=False)
-    f4['Nro. Red. Inventario'].fillna('N/A', inplace=True)
-    f4 = f4[(f4['Nro. Red. Inventario'].str.isdigit()) & (~f4['Nro. Red. Inventario'].str.startswith('1'))]
+    f4[f4['nro_red_inventario'].isna()].to_csv(f'output/planillas/{dt_string}-f4-error.csv', sep=';', index=False)
+    f4['nro_red_inventario'].fillna('N/A', inplace=True)
+    f4 = f4[(f4['nro_red_inventario'].str.isdigit()) & (~f4['nro_red_inventario'].str.startswith('1'))]
 
     # Extraer el F11
-    f4['F11'] = f4.Destino.str.extract('([1]\d{7,})')  # Extrae el valor F11
-    num_fonces = f4['F11'].notna().sum()
+    f4['f11'] = f4['destino'].str.extract('([1]\d{7,})')  # Extrae el valor F11
+    num_fonces = f4['f11'].notna().sum()
     print(f'   {n_vacias} filas con dos o menos valores no nulos \n   {indice.shape[0]}  registros desplazados \n   {num_fonces} registros con valores de F11')
+    
+    # -------------------------------------------------------
+    # Revisar info
+    text_cols = [ 'desc_local', 'estado', 'tipo_redinv', 'usuario_creacion', 
+       'usuario_reserva', 'usuario_envio', 'destino','desccentro_e_costo', 'linea',
+       'descripcion_linea', 'subclase', 'descripcion_subclase', 'descripcion_producto'] 
+
+    fnum_cols = ['nro_red_inventario', 'local', 'rut_destino', 'centro_de_costos',
+    'nro_producto', 'upc',]
+
+    num_cols = ['cantidad', 'precio_vta', 'precio_costo',
+       'total_precio_vta', 'total_precio_costo']
+
+    date_cols = ['fecha_creacion', 'fecha_reserva', 'fecha_envio']
+
+    f4.loc[:, text_cols] = f4.loc[:, text_cols].apply(ct.clean_str)
+    f4.loc[:, fnum_cols] = f4.loc[:, fnum_cols].apply(ct.clean_fnum)
+    f4.loc[:, num_cols] = f4.loc[:, num_cols].apply(ct.clean_num)
+    
     
     # Guardar los archivos 
     vacias.to_csv(f'output/planillas/{dt_string}-f4-vacias.csv', sep=';')
@@ -157,9 +200,8 @@ def excel_to_csv(filename, sheetname):
 
 def get_data(f3, f4, f5, kpi, refact, db):
     gd = GetData()
-    selection_var = mgd()
     gd.load_data(f3, f4, f5, kpi, refact, db)
-    gd.run_gd(selection_var)
+    gd.run_gd()
 
 # Menú de opciones 
 print('-------  Plantillas SRX')
