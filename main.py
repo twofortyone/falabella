@@ -1,6 +1,7 @@
 from io import SEEK_SET
 from os import pipe
 import os
+from cf11_cd import CF11_CD
 
 select_var = ''
 
@@ -53,9 +54,17 @@ while select_var!='4':
         menu_cf11()
         sv_cf11= input('  Rta: ')
         if sv_cf11=='1':
-            exec(open('cf11_cd_20.py').read())
+            names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_cd_20']
+            fcols = ['f3nuevo','f4_nuevo','f5','nfolio','f12']
+            pcols = ['status_nuevo', 'prd_upc', 'total_costo_promedio', 'qproducto', 'indice_cf11']
+            cf11 = CF11_CD('2020', names, fcols, pcols)
+            cf11.run_test()
         elif sv_cf11=='2':
-            exec(open('cf11_cd_21.py').read())
+            names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_cd_21']
+            fcols = ['f3','f4','f5','nfolio','f12']
+            pcols = ['status_final', 'prd_upc', 'costo_total', 'qproducto', 'indice_cf11']
+            cf11 = CF11_CD('2021', names, fcols, pcols)
+            cf11.run_test()
         elif sv_cf11=='3':
             exec(open('cf11_tienda_20.py').read())
         elif sv_cf11=='4':

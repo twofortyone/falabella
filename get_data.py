@@ -156,6 +156,7 @@ class GetData():
                 cf11_21_text = ['xobservacion', 'status_final', 'xservicio']
                 self.update_lists('cf11_cd_21', cf11_21_colsreq, cf11_21_fnum, cf11_21_num, cf11_21_text)
                 self.get_data()
+                self.lista[5] = self.lista[5].rename(columns={'f11':'nfolio'}) # Only for 2021 
                 self.save_files('cierres_f11/cd')
 
             elif data_select =='3': # CF11s Tienda 2020 
