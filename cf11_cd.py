@@ -92,7 +92,8 @@ class CF11_CD():
     def test_call_20(self):
         lista_f4 = [ ['f4 de merma', '2021'], ['cierre x f4 cobrado a terceros', '2021'], 
         ['f4 de merma - por duplicidad f12 + upc + cantidad', '2021'], 
-        ['f4 de merma - no se puede generar producto no existe', '2021'] ] # 'error en cierre de f11', 'error en creacion de f11','politica cambio agil','cierre x f4 dado baja crate prestamos', 'f4 de mermaf4 2020 cierre f11 2021', 'f4 en revision',
+        ['f4 de merma - no se puede generar producto no existe', '2021'], 
+        ['registro duplicado en base de datos', '2021']] # 'error en cierre de f11', 'error en creacion de f11','politica cambio agil','cierre x f4 dado baja crate prestamos', 'f4 de mermaf4 2020 cierre f11 2021', 'f4 en revision',
         lista_f3 = [['f3 en revision', '2021'],['cierre x f3 devuelto a proveedor', '2021']]
         lista_f5 = ['producto en tienda', '2021']
         lista_kpi = [['cierre x producto guardado despues de inventario', '2021', 'Recibido con fecha anterior al 21/01/2021'], 
@@ -108,10 +109,11 @@ class CF11_CD():
     def test_call_21(self):
         lista_f3 = [['f3 en revision', '2021'],['cierre x f3 devuelto a proveedor', '2021']]
         lista_f4 = [['f4 en revision', '2021'],['cierre x f4 cobrado a terceros', '2021'], ['f4 de merma', '2021'], 
-                    ['error en creacion de f11', '2021'] , ['error en cierre f11', '2021']] 
+                    ['error en creacion de f11', '2021'] , ['error en cierre f11', '2021'], ['entregado a cliente', '2021']] 
         lista_f5 = ['producto en tienda', '2021']
         lista_kpi = [['cierre x producto guardado despues de inventario', '2021', 'Recibido con fecha anterior al 21/01/2021'], 
-        ['cierre x producto guardado despues de inventario - no aplica f12', '2021', 'Recibido con fecha anterior al 21/01/2021']]
+        ['cierre x producto guardado despues de inventario - no aplica f12', '2021', 'Recibido con fecha anterior al 21/01/2021'], 
+        ['cierre x producto guardado antes de inventario', '2020', 'Recibido con fecha posterior al 20/01/2021']]
         lista_refact = 'cierre x recupero con cliente - refacturacion - base fal.com'
 
         self.multi_test(0, lista_f3) # F3 

@@ -21,11 +21,12 @@ cost_column = 'ct'
 status_column = 'tipmc'
 qty_column = 'cantidad_trx_actual'
 upc_column = 'upc'
+estado_col = 'esmc'
 fcols = ['f3','f4','f5','f11', 'f12', 'cod_aut_nc']
 # --------------------------------------------------------------------------------------------
 # Cargar data
 data = []
-names = ['f3', 'f4', 'f5', 'kpi','refact', 'cierres_nc']
+names = ['f3', 'f4', 'f5', 'kpi','refact', 'cierres_nc_20']
 
 pre_file = input('Ingrese prefijo de archivos: ')
 
@@ -70,33 +71,71 @@ kpi['fecha_paletiza'] = pd.to_datetime(kpi['fecha_paletiza'])
 # TODO ---- revisar hasta aquí 
 
 # Inicio de análisis de cierres 
-cerrado = nc[nc['esmc']=='cerrado']
+cerrado = nc[nc[estado_col]=='cerrado']
 cierres_nc = CierresNC(nc, index_name)
-cierres_nc.set_fcols(fcols, [status_column, upc_column, cost_column, qty_column])
+cierres_nc.set_fcols(fcols, [status_column, upc_column, cost_column, qty_column, estado_col])
 #TODO fix f12 number in f4_verify
 
-# Validación B6
-cierres_nc.f5_verify_20(f5, '2021', 'cod_aut_nc')
-lista_tipm_f4 = ['se asocia f4 dado de baja por producto entregado a cliente','se asocia f4 por producto no ubicado','se asocia f4-baja de inventario-menaje']
+
+cierres_nc.kpi_verify_20_2435(kpi, '2021', 'Recibido con fecha anterior al 21/01/2021') # Bases 2345 
+cierres_nc.refact_verify_20(refact) # Validación B1 
+cierres_nc.kpi_verify_20(kpi, '2021', 'Recibido con fecha anterior al 21/01/2021') # Validación B7
+
+## --- Cod nuevo
+
+
+# Validación B6 - Aparte del resto porque no tiene UPC pero SKU 
+# F5 
+lista_tipmc_f5 = [ 'con mc asociada','compensacion con ct verde', 'se asocia f11-conciliacion con transportadora', 'con quiebre asociado', 'f12 en digitado sin salida',
+'con f11 tipo cliente asociado', 'compensa con ct verde',  'con ro asociado', 'producto en tienda', 'compensa con local de ventaanulado x user','f5 en revision', 
+'con f5 - recibido en cd', 'compensacion con preventas', 'compensacion con tienda', 'compensa con tienda', 'se asocia f3-devuelto a proveedor', 'compensado con ct verde']
+
+print('Análisis F5s')
+for tipo in tqdm(lista_tipmc_f5):
+    cierres_nc.f5_verify_20_b6(f5, tipo, '2021', 'cod_aut_nc')
+
+# F4 
+lista_tipm_f4 = [ 'f4 de merma', 'f4 merma x producto recibido en 2020', 'f4 cobrado a terceros', 'con f4 de merma', 
+'se asocia f4 por producto no ubicado', 'se asocia f4 dado de baja por producto entregado a cliente', 'registro duplicado', 
+'f4 cobrado a tercero', 'se asocia f4 dado de baja']
 print('Análisis F4s')
 for tipo2 in tqdm(lista_tipm_f4):
     cierres_nc.f4_verify_20_b6(f4, tipo2, '2021')
 
-# Validación B2345
-cierres_nc.f3_verify_20(f3, 'f3 devuelto a proveedor', '2021')
+# -------------------------------------------
+# Validación F5 
+lista_tipmc_f5 = [ 'con mc asociada','compensacion con ct verde', 'se asocia f11-conciliacion con transportadora', 'con quiebre asociado', 'f12 en digitado sin salida',
+'con f11 tipo cliente asociado', 'compensa con ct verde',  'con ro asociado', 'producto en tienda', 'compensa con local de ventaanulado x user','f5 en revision', 
+'con f5 - recibido en cd', 'compensacion con preventas', 'compensacion con tienda', 'compensa con tienda']
 
-lista_tipm_f4 = ['f4 de merma', 'f4 cobrado a terceros' ]
+print('Análisis F5s')
+for tipo in tqdm(lista_tipmc_f5):
+    cierres_nc.f5_verify_20(f5, tipo, '2021', 'cod_aut_nc')
+
+# F4 
+lista_tipm_f4 = [ 'f4 de merma', 'f4 merma x producto recibido en 2020', 'f4 cobrado a terceros', 'con f4 de merma', 'se asocia f4 por producto no ubicado', 
+'se asocia f4 dado de baja por producto entregado a cliente', 'registro duplicado', 'f4 cobrado a tercero', 'para verificacion de f4 - creacion f4 dado de baja']
 print('Análisis F4s')
 for tipo2 in tqdm(lista_tipm_f4):
     cierres_nc.f4_verify_20(f4, tipo2, '2021')
 
-cierres_nc.kpi_verify_20_2435(kpi, '2021', 'Recibido con fecha anterior al 21/01/2021')
+# F3
+lista_tipm_f3 = [ 'f3 devuelto a proveedor', 'con f3 devuelto a proveedor', 'se asocia f3-devuelto a proveedor']
+print('Análisis F3s')
+for tipo3 in tqdm(lista_tipm_f3):
+    cierres_nc.f3_verify_20(f3, tipo3, '2021')
 
-# Validación B1 
-cierres_nc.refact_verify_20(refact)
+""" #-- F5 locales 
+nil = cierres_nc.f5_verify_local_list(f5,'compensacion con preventas', '2021', 'cod_aut_nc', 'preventas',preventas)
+print(nil)
+print('tiendas ------------------------------------------------------------')
+nil = cierres_nc.f5_verify_local_list(f5,'compensacion con tienda', '2021', 'cod_aut_nc', 'tiendas ',tiendas)
+print(nil)
+print('tiendas ------------------------------------------------------------')
+nil = cierres_nc.f5_verify_local_list(f5,'compensa con tienda', '2021', 'cod_aut_nc', 'tiendas ',tiendas)
+print(nil) """
 
-# Validación B7
-cierres_nc.kpi_verify_20(kpi, '2021', 'Recibido con fecha anterior al 21/01/2021')
+### --- Fin cod nuevo 
 
 nc = cierres_nc.get_db()
 nc.loc[nc['GCO'].notna(), 'checked'] = 'y'
@@ -116,10 +155,10 @@ print(res)
 print(res[('ct', 'sum')].sum())
 
 def guardar():
-    nc.to_excel(f'output/cierres_nc/{dt_string}-cnc-output.xlsx', sheet_name=f'{dt_string}_cnc', index=False)
+    nc.to_excel(f'output/cierres_nc/{dt_string}-cnc_20-output.xlsx', sheet_name=f'{dt_string}_cnc', index=False)
     nc2 = nc.merge(f5, how='left', left_on=[fcols[2],upc_column], right_on=['transfer','upc'], validate='many_to_one')
     nc3 = nc2.merge(f4, how='left',  left_on=[fcols[1],upc_column], right_on=['nro_red_inventario','upc'],validate='many_to_one')
-    path = f'output/cierres_nc/{dt_string}-cnc-all.xlsx'
+    path = f'output/cierres_nc/{dt_string}-cnc_20-all.xlsx'
     nc3.to_excel(path, sheet_name=f'{dt_string}_cnc', index=False) 
     return path
 

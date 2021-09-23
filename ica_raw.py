@@ -258,8 +258,10 @@ class InternalControlAnalysis:
         dup_cols = ['f12', 'prd_upc']
         redcols = ['f12', 'prd_upc',status]
 
-        concept1 = 'cierre x duplicidad (f11 con mismo f12+sku+cantidad)'
-        concept2 = 'registro duplicado en base de datos'
+        # concept1 = 'cierre x duplicidad (f11 con mismo f12+sku+cantidad)'
+        # concept2 = 'registro duplicado en base de datos' # 2020
+        concept1= 'cierre por f11 duplicado'
+        concept2 = 'cierre x duplicidad f12+upc+qty'
         sin_cat_dup = self.db[(self.db[status]!= concept1)&(self.db[status]!=concept2)]
         cat_dup = self.db[((self.db[status]== concept1)|(self.db[status]==concept2))]
 

@@ -40,6 +40,7 @@ class CierresF11:
             ne = self.ica.get_notfound( df3, f4, [self.fcols[1], self.pcols[1]], ['nro_red_inventario','upc'], 'nro_red_inventario', 'F4|UPC|QTY')
             df4 = pd.merge(df3, f4, left_on=[self.fcols[1], self.pcols[1]], right_on=['nro_red_inventario','upc'])
             if df4.empty ==False: 
+                #auxdf4 = self.ica.get_diffvalue(df4, 'tipo_redinv', 'dado de baja', 'NDB', 'El tipo de F4 es diferente a dado de baja')
                 df5 = self.ica.get_equalvalue(df4, 'estado', 'anulado', 'ANU', 'Registro anulado')
                 df6 = self.ica.get_diffvalue(df5, 'aa creacion', yyyy, 'NAA', f'Registro con año de creación diferente a {yyyy}')
                 df7 = self.ica.get_diffqty_pro(df6, self.pcols[3], 'cantidad',self.fcols[3],'nro_red_inventario', 'Cantidad de los F11s de un F4 > cantidad del F4')
@@ -49,7 +50,7 @@ class CierresF11:
                 self.ica.get_okk_dup(iokf4, 'Comentario GCO', 'F4+UPC+QTY')
                 self.ica.get_dup_i(iokf4, 'F4+UPC+QTY')
 
-    def f5_verify(self, f5, status, yyyy, ):
+    def f5_verify(self, f5, status, yyyy):
         df1 = self.db[self.db[self.pcols[0]]==status]
         df2 = self.ica.get_fnan( df1, self.fcols[2], 'F5')
         if df2.empty ==False: 
@@ -73,10 +74,10 @@ class CierresF11:
         df2= self.ica.get_fnan_cols(df1, [self.fcols[4],self.fcols[3]], 'KPID')
         if df2.empty == False:
             df3 = self.ica.get_duplicates( df2, [self.fcols[4],'prd_upc', 'qproducto'], 'F12 + UPC + Cantidad')
-            index_ne_kpi_di = self.ica.get_notfound( df3, kpi, [self.fcols[4]], ['entrada'], 'entrada', '(F12|F11)')
-            index_ne_kpi_di2 = self.ica.get_notfound( self.db.loc[index_ne_kpi_di], kpi, [self.fcols[3]], ['entrada'], 'entrada', '(F12|F11)')
-            pgdim1 = pd.merge(df3, kpi, left_on=[self.fcols[4]], right_on=['entrada'])
-            pgdim2 = pd.merge(df3.loc[index_ne_kpi_di], kpi, left_on=[self.fcols[3]], right_on=['entrada'])
+            index_ne_kpi_di = self.ica.get_notfound( df3, kpi, [self.fcols[3]], ['entrada'], 'entrada', '(F12|F11)')
+            index_ne_kpi_di2 = self.ica.get_notfound( self.db.loc[index_ne_kpi_di], kpi, [self.fcols[4]], ['entrada'], 'entrada', '(F12|F11)')
+            pgdim1 = pd.merge(df3, kpi, left_on=[self.fcols[3]], right_on=['entrada'])
+            pgdim2 = pd.merge(df3.loc[index_ne_kpi_di], kpi, left_on=[self.fcols[4]], right_on=['entrada'])
             lpgdi = [pgdim1, pgdim2]
             pgdim = pd.concat(lpgdi, axis=0)
             pgdimdyear = '' 
@@ -89,7 +90,7 @@ class CierresF11:
             self.ica.update_db(iokkpid,'Comentario GCO', 'Coincidencia exacta (F12|F11)')
             self.ica.get_okk_dup(iokkpid, 'Comentario GCO', '(F12|F11)')
             self.ica.get_dup_i(iokkpid, '(F12|F11)')
-
+            
     def refact_verify(self, refact, status):
         df1 = self.db[self.db[self.pcols[0]]==status]
         df2= self.ica.get_fnan( df1, self.fcols[4], 'F12')

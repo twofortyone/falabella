@@ -4,12 +4,14 @@ from datetime import datetime
 
 dt_string = datetime.now().strftime('%y%m%d-%H%M')
 
-# nc = pd.read_excel('input/Seguimiento_F11.xlsx', sheet_name='data',  dtype='object')
-# path_intermedio = f'output/db-pbi/{dt_string}-data_f11-inter.csv'
-# nc = ct.norm_header(nc)
-# nc.to_csv(path_intermedio, sep=';', index=False) 
+nc = pd.read_excel('input/db-pbi/210823_f11.xlsx', sheet_name='DB',  dtype='object')
 
-path_intermedio = f'output/db-pbi/210811-1923-data_f11-inter.csv'
+nc = ct.norm_header(nc)
+
+path_intermedio = f'output/db-pbi/{dt_string}-data_f11-inter.csv'
+nc.to_csv(path_intermedio, sep=';', index=False) 
+
+#path_intermedio = f'output/db-pbi/210811-1923-data_f11-inter.csv'
 nc = pd.read_csv(path_intermedio, sep=';', dtype='object')
 
 def drop_except(df, cols):

@@ -21,11 +21,12 @@ cost_column = 'ct'
 status_column = 'tipificacion_final'
 qty_column = 'cantidad_trx_actual'
 upc_column = 'upc'
+estado_col = 'estado_final'
 fcols = ['f3','f4','f5','f11', '', 'cod_aut_nc']
 # --------------------------------------------------------------------------------------------
 # Cargar data
 data = []
-names = ['f3', 'f4', 'f5', 'kpi','refact', 'cierres_nc']
+names = ['f3', 'f4', 'f5', 'kpi','refact', 'cierres_nc_21']
 
 pre_file = input('Ingrese prefijo de archivos: ')
 
@@ -62,9 +63,9 @@ f4['aa creacion'] = f4['fecha_creacion'].str.split('-').str[2]
 # TODO ---- revisar hasta aquí 
 
 # Inicio de análisis de cierres 
-cerrado = nc[nc['estado_final']=='cerrado']
+cerrado = nc[nc[estado_col]=='cerrado']
 cierres_nc = CierresNC(nc, index_name)
-cierres_nc.set_fcols(fcols, [status_column, upc_column, cost_column, qty_column])
+cierres_nc.set_fcols(fcols, [status_column, upc_column, cost_column, qty_column, estado_col])
 #TODO fix f12 number in f4_verify
 
 lista_tipmc_f5 = [ 'con mc asociada','con ro asociado','compensacion con ct verde', 'con quiebre asociado', 'f5 en revision','se asocia f11-conciliacion con transportadora',
@@ -74,7 +75,8 @@ print('Análisis F5s')
 for tipo in tqdm(lista_tipmc_f5):
     cierres_nc.f5_verify(f5, tipo, '2021', 'cod_aut_nc')
 
-lista_tipm_f4 = [ 'se asocia f4 dado de baja por producto entregado a cliente', 'se asocia f4 por producto no ubicado','se asocia f4-baja de inventario-menaje', 'baja con cargo a linea por costos', 'baja con cargo a dependencia por politicasdefiniciones', ]
+lista_tipm_f4 = [ 'se asocia f4 dado de baja por producto entregado a cliente', 'se asocia f4 por producto no ubicado','se asocia f4-baja de inventario-menaje',
+ 'baja con cargo a linea por costos', 'baja con cargo a dependencia por politicasdefiniciones', 'error en generacion de nota credito', 'se asocia f4-baja de inventario-fast track', 'se asocia f4 por producto no ubicado - postventa']
 print('Análisis F4s')
 for tipo2 in tqdm(lista_tipm_f4):
     cierres_nc.f4_verify(f4, tipo2, '2021')
@@ -108,10 +110,10 @@ print(res)
 print(res[('ct', 'sum')].sum())
 
 def guardar():
-    nc.to_excel(f'output/cierres_nc/{dt_string}-cnc-output.xlsx', sheet_name=f'{dt_string}_cnc', index=False)
+    nc.to_excel(f'output/cierres_nc/{dt_string}-cnc_21-output.xlsx', sheet_name=f'{dt_string}_cnc', index=False)
     nc2 = nc.merge(f5, how='left', left_on=[fcols[2],upc_column], right_on=['transfer','upc'], validate='many_to_one')
     nc3 = nc2.merge(f4, how='left',  left_on=[fcols[1],upc_column], right_on=['nro_red_inventario','upc'],validate='many_to_one')
-    path = f'output/cierres_nc/{dt_string}-cnc-all.xlsx'
+    path = f'output/cierres_nc/{dt_string}-cnc_21-all.xlsx'
     nc3.to_excel(path, sheet_name=f'{dt_string}_cnc', index=False) 
     return path
 
