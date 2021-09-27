@@ -2,6 +2,7 @@ from os import name
 import pandas as pd
 from datetime import datetime
 from ica_cierres import CierresF11
+from etl import ETL
 
 class CF11_CD():
 
@@ -11,15 +12,16 @@ class CF11_CD():
         self.names = names
         self.fcols = fcols
         self.pcols = pcols
+        self.etl = ETL('input/cierres_f11/cd/')
 
     def run_test(self):
-        self.load_data() # Load files 
+        self.data = self.etl.load_data(self.names) # Load files 
         self.set_index() # Set index 
         self.convert_dtypes() # Convert data types 
         self.set_dates() # Set date columns 
-        self.cierres = CierresF11(self.data[5], self.pcols[4])
+        self.cierres = CierresF11(self.data[5])
         self.cierres.set_fcols(self.fcols, self.pcols)
-        self.cierres.starting([self.fcols[4],self.pcols[1], self.pcols[3]]) 
+        self.cierres.starting([self.fcols[4],self.pcols[2], self.pcols[4]]) 
         
         self.test_call_selection() # Select test call based on the year 
         self.cierres.finals()
@@ -33,12 +35,6 @@ class CF11_CD():
         elif self.year == '2021':
             self.test_call_21() 
 
-    def load_data(self):
-        pre_file = input('Ingrese prefijo de archivos: ')
-
-        for name in self.names:
-            self.data.append(pd.read_csv(f'input/cierres_f11/cd/{pre_file}{name}.csv', sep=';', dtype='object'))
-
     def convert_dtypes(self):
         # TODO boost performance 
         # Convertir columnas a número 
@@ -47,7 +43,7 @@ class CF11_CD():
         self.data[2].loc[:,'cant_pickeada'] = pd.to_numeric(self.data[2].loc[:,'cant_pickeada'])
         self.data[2].loc[:,'cant_recibida'] = pd.to_numeric(self.data[2].loc[:,'cant_recibida'])
         #f5.loc[:,['cant_pickeada','cant_recibida']] =  f5[['cant_pickeada','cant_recibida']].apply(pd.to_numeric)
-        self.data[5].loc[:,[self.pcols[3],self.pcols[2]]] = self.data[5][[self.pcols[3],self.pcols[2]]].apply(pd.to_numeric)
+        self.data[5].loc[:,[self.pcols[4],self.pcols[3]]] = self.data[5].loc[:,[self.pcols[4],self.pcols[3]]].apply(pd.to_numeric)
 
     def set_dates(self):
         # TODO delete this method 
@@ -71,7 +67,7 @@ class CF11_CD():
 
     def set_index(self) -> None:
         self.data[5] = self.data[5].reset_index()
-        self.data[5].rename(columns={'index': self.pcols[4]}, inplace=True)
+        self.data[5].rename(columns={'index': self.pcols[0]}, inplace=True)
 
     def multi_test(self, test_id, tlist):
         for tlist_desc in tlist:
@@ -125,9 +121,9 @@ class CF11_CD():
     def save_test(self):
         dt_string = datetime.now().strftime('%y%m%d-%H%M')
         self.data[5].to_excel(f'output/cierres_f11/cd/{dt_string}-{self.names[5]}-output.xlsx', sheet_name=f'{dt_string}_{self.names[5]}', index=False, encoding='utf-8') # Guarda el archivo 
-        bdcia = self.data[5].merge(self.data[0], how='left', left_on=[self.fcols[0],self.pcols[1]], right_on=['nro_devolucion','upc'], validate='many_to_one')
-        bdcia2 = bdcia.merge(self.data[1], how='left',  left_on=[self.fcols[1],self.pcols[1]], right_on=['nro_red_inventario','upc'],validate='many_to_one')
-        bdcia3 = bdcia2.merge(self.data[2], how='left', left_on=[self.fcols[2],self.pcols[1]], right_on=['transfer','upc'], validate='many_to_one')
+        bdcia = self.data[5].merge(self.data[0], how='left', left_on=[self.fcols[0],self.pcols[2]], right_on=['nro_devolucion','upc'], validate='many_to_one')
+        bdcia2 = bdcia.merge(self.data[1], how='left',  left_on=[self.fcols[1],self.pcols[2]], right_on=['nro_red_inventario','upc'],validate='many_to_one')
+        bdcia3 = bdcia2.merge(self.data[2], how='left', left_on=[self.fcols[2],self.pcols[2]], right_on=['transfer','upc'], validate='many_to_one')
         bdcia4 = bdcia3.merge(self.data[3], how='left',left_on=[self.fcols[3]], right_on=['entrada'],validate='many_to_one')
         bdcia5 = bdcia4.merge(self.data[3], how='left',left_on=[self.fcols[4]], right_on=['entrada'],validate='many_to_one')
         #bdcia6 = bdcia4.merge(refact, how='left',left_on=[fcols[4]], right_on=['f12cod'],validate='many_to_one')
@@ -145,9 +141,9 @@ class CF11_CD():
             print('Ok')
 
     def print_results(self):
-        print(self.data[5].groupby('gco_dup')[self.pcols[2]].sum())
-        print(self.data[5].groupby('gco_dupall')[self.pcols[2]].sum())
-        res = self.data[5].groupby([self.pcols[0],'GCO']).agg({self.pcols[2]:['sum', 'size']}).sort_values(by=[self.pcols[0],(self.pcols[2],'sum')], ascending=False)
+        print(self.data[5].groupby('gco_dup')[self.pcols[3]].sum())
+        print(self.data[5].groupby('gco_dupall')[self.pcols[3]].sum())
+        res = self.data[5].groupby([self.pcols[1],'GCO']).agg({self.pcols[3]:['sum', 'size']}).sort_values(by=[self.pcols[1],(self.pcols[3],'sum')], ascending=False)
         print(res)
 
 
@@ -160,11 +156,11 @@ def innit_commandline():
     if year =='2020':
         names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_cd_20']
         fcols = ['f3nuevo','f4_nuevo','f5','nfolio','f12']
-        pcols = ['status_nuevo', 'prd_upc', 'total_costo_promedio', 'qproducto', 'indice_cf11']
+        pcols = ['indice_cf11','status_nuevo', 'prd_upc', 'total_costo_promedio', 'qproducto']
     elif year =='2021':
         names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_cd_21']
         fcols = ['f3','f4','f5','nfolio','f12']
-        pcols = ['status_final', 'prd_upc', 'costo_total', 'qproducto', 'indice_cf11']
+        pcols = ['indice_cf11','status_final', 'prd_upc', 'costo_total', 'qproducto']
     
     cf11 = CF11_CD(year, names, fcols, pcols)
     cf11.run_test()

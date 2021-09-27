@@ -56,13 +56,13 @@ while select_var!='4':
         if sv_cf11=='1':
             names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_cd_20']
             fcols = ['f3nuevo','f4_nuevo','f5','nfolio','f12']
-            pcols = ['status_nuevo', 'prd_upc', 'total_costo_promedio', 'qproducto', 'indice_cf11']
+            pcols = ['indice_cf11','status_nuevo', 'prd_upc', 'total_costo_promedio', 'qproducto']
             cf11 = CF11_CD('2020', names, fcols, pcols)
             cf11.run_test()
         elif sv_cf11=='2':
             names = ['f3', 'f4', 'f5', 'kpi','refact', 'cf11_cd_21']
             fcols = ['f3','f4','f5','nfolio','f12']
-            pcols = ['status_final', 'prd_upc', 'costo_total', 'qproducto', 'indice_cf11']
+            pcols = ['indice_cf11','status_final', 'prd_upc', 'costo_total', 'qproducto']
             cf11 = CF11_CD('2021', names, fcols, pcols)
             cf11.run_test()
         elif sv_cf11=='3':

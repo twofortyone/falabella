@@ -72,8 +72,8 @@ kpi['fecha_paletiza'] = pd.to_datetime(kpi['fecha_paletiza'])
 
 # Inicio de análisis de cierres 
 cerrado = nc[nc[estado_col]=='cerrado']
-cierres_nc = CierresNC(nc, index_name)
-cierres_nc.set_fcols(fcols, [status_column, upc_column, cost_column, qty_column, estado_col])
+cierres_nc = CierresNC(nc)
+cierres_nc.set_fcols(fcols, [index_name, status_column, upc_column, cost_column, qty_column, estado_col])
 #TODO fix f12 number in f4_verify
 
 
@@ -92,7 +92,7 @@ lista_tipmc_f5 = [ 'con mc asociada','compensacion con ct verde', 'se asocia f11
 
 print('Análisis F5s')
 for tipo in tqdm(lista_tipmc_f5):
-    cierres_nc.f5_verify_20_b6(f5, tipo, '2021', 'cod_aut_nc')
+    cierres_nc.f5_verify_20_b6(f5, tipo, '2021')
 
 # F4 
 lista_tipm_f4 = [ 'f4 de merma', 'f4 merma x producto recibido en 2020', 'f4 cobrado a terceros', 'con f4 de merma', 
@@ -110,7 +110,7 @@ lista_tipmc_f5 = [ 'con mc asociada','compensacion con ct verde', 'se asocia f11
 
 print('Análisis F5s')
 for tipo in tqdm(lista_tipmc_f5):
-    cierres_nc.f5_verify_20(f5, tipo, '2021', 'cod_aut_nc')
+    cierres_nc.f5_verify_20(f5, tipo, '2021')
 
 # F4 
 lista_tipm_f4 = [ 'f4 de merma', 'f4 merma x producto recibido en 2020', 'f4 cobrado a terceros', 'con f4 de merma', 'se asocia f4 por producto no ubicado', 
@@ -126,13 +126,13 @@ for tipo3 in tqdm(lista_tipm_f3):
     cierres_nc.f3_verify_20(f3, tipo3, '2021')
 
 """ #-- F5 locales 
-nil = cierres_nc.f5_verify_local_list(f5,'compensacion con preventas', '2021', 'cod_aut_nc', 'preventas',preventas)
+nil = cierres_nc.f5_verify_local_list(f5,'compensacion con preventas', '2021',  'preventas',preventas)
 print(nil)
 print('tiendas ------------------------------------------------------------')
-nil = cierres_nc.f5_verify_local_list(f5,'compensacion con tienda', '2021', 'cod_aut_nc', 'tiendas ',tiendas)
+nil = cierres_nc.f5_verify_local_list(f5,'compensacion con tienda', '2021',  'tiendas ',tiendas)
 print(nil)
 print('tiendas ------------------------------------------------------------')
-nil = cierres_nc.f5_verify_local_list(f5,'compensa con tienda', '2021', 'cod_aut_nc', 'tiendas ',tiendas)
+nil = cierres_nc.f5_verify_local_list(f5,'compensa con tienda', '2021', 'tiendas ',tiendas)
 print(nil) """
 
 ### --- Fin cod nuevo 
