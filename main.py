@@ -2,6 +2,7 @@ from io import SEEK_SET
 from os import pipe
 import os
 from cf11_cd import CF11_CD
+from cnc_cd import CNC_CD
 
 select_var = ''
 
@@ -80,7 +81,11 @@ while select_var!='4':
         if sv_nc=='1':
             exec(open('cierres_nc_cd_20.py').read())
         elif sv_nc=='2':
-            exec(open('cierres_nc_cd.py').read())
+            names = ['f3', 'f4', 'f5', 'kpi','refact', 'cierres_nc_21']
+            fcols = ['f3','f4','f5','f11', '', 'cod_aut_nc']
+            pcols = ['indice_cnc', 'tipificacion_final', 'upc', 'ct', 'cantidad_trx_actual', 'estado_final']
+            cnc = CNC_CD(names, fcols, pcols)
+            cnc.run_test()
         elif sv_nc=='3':
             clean()
         else:

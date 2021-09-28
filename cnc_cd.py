@@ -105,7 +105,7 @@ class CNC_CD():
         self.data[5].to_excel(f'output/cierres_nc/{dt_string}-cnc_21-output.xlsx', sheet_name=f'{dt_string}_cnc', index=False)
         nc2 = self.data[5].merge(self.data[2], how='left', left_on=[self.fcols[2],self.pcols[2]], right_on=['transfer','upc'], validate='many_to_one')
         nc3 = nc2.merge(self.data[1], how='left',  left_on=[self.fcols[1],self.pcols[2]], right_on=['nro_red_inventario','upc'],validate='many_to_one')
-        path = f'output/cierres_nc/{dt_string}-cnc_21-output.xlsx'
+        path = f'output/cierres_nc/{dt_string}-cnc_21-all.xlsx'
         nc3.to_excel(path, sheet_name=f'{dt_string}_cnc', index=False) 
         return path
 

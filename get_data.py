@@ -188,10 +188,10 @@ class GetData():
                 self.save_files('cierres_nc')
             
             elif data_select == '6': # Cierres NCs 2021
-                cnc_colsreq = ['cod_aut_nc', 'local_trx', 'terminal', 'local_ant', 'upc', 'ct', 'cantidad_trx_actual', 'tipo_nc', 'f3', 'f4','f5', 'f11', 'estado_final', 'tipificacion_final', 'sku', 'primera_do_f12'] 
+                cnc_colsreq = ['cod_aut_nc', 'local_trx', 'terminal', 'local_ant', 'upc', 'ct', 'cantidad_trx_actual', 'tipo_nc', 'f3', 'f4','f5', 'f11', 'estado_final', 'tipificacion_final', 'sku', 'primera_do_f12', 'fecha_proceso', 'fecha_proc_ant', 'ctip_prd', 'xtip_prd', 'desc_sku', 'tipo_nc'] 
                 cnc_fnum = ['cod_aut_nc', 'upc', 'f3', 'f4', 'f5', 'f11','local_trx', 'terminal', 'local_ant', 'sku', 'primera_do_f12']
                 cnc_num = [ 'ct', 'cantidad_trx_actual'] 
-                cnc_text = ['estado_final', 'tipificacion_final']
+                cnc_text = ['estado_final', 'tipificacion_final', 'ctip_prd', 'xtip_prd', 'desc_sku', 'tipo_nc']
                 self.update_lists('cierres_nc_21', cnc_colsreq, cnc_fnum, cnc_num, cnc_text)
                 self.get_data()
                 self.save_files('cierres_nc')
