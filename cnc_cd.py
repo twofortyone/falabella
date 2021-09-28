@@ -82,23 +82,28 @@ class CNC_CD():
             self.cnc.f5_verify_local(self.data[2], type_data[0], type_data[1], type_data[2])
         elif test_id == 4:
             self.cnc.f5_verify_local_list(self.data[2], type_data[0], type_data[1], type_data[2], type_data[3])
+        elif test_id == 5:
+            self.cnc.no_carga_verify(type_data[0])
             
 
     def test_call(self):
-        lista_f4 = [['se asocia f4 dado de baja por producto entregado a cliente', '2021'], ['se asocia f4 por producto no ubicado', '2021'],
+        lista_f4 = [['se asocia f4 dado de baja por producto entegado a cliente con nc', '2021'], ['se asocia f4 por producto no ubicado', '2021'],
                     ['se asocia f4-baja de inventario-menaje', '2021'],['baja con cargo a linea por costos', '2021'], 
                     ['baja con cargo a dependencia por politicasdefiniciones', '2021'], ['error en generacion de nota credito', '2021'], 
-                    ['se asocia f4-baja de inventario-fast track', '2021'], ['se asocia f4 por producto no ubicado - postventa', '2021']]
+                    ['se asocia f4-baja de inventario-fast track', '2021'], ['se asocia f4 por producto no ubicado - postventa', '2021'], 
+                    ['asociado a f4 facturacion por transportes', '2021']]
         lista_f5 = [['con mc asociada', '2021'],['con ro asociado', '2021'],['compensacion con ct verde', '2021'], ['con quiebre asociado', '2021'], ['f5 en revision', '2021'],
                     ['se asocia f11-conciliacion con transportadora', '2021'],['con f11 tipo cliente asociado', '2021'],['se asocia f3-devuelto a proveedor', '2021'],
                     ['compensa con local de ventaanulado x user', '2021'], ['f12 en digitado sin salida', '2021']]
         lista_f5_local = ['compensacion con dvd administrativo', '2021', '3001']
         lista_f5_local_lista = [['compensacion con ct ciudades', '2021', 'CTs', cts], ['compensacion con preventas', '2021','preventas', preventas], ['compensacion con tienda', '2021','tiendas', tiendas]]
-        
+        lista_nac = ['local venta 3000no aplica carga']
+
         self.multi_test(1, lista_f4)
         self.multi_test(2, lista_f5)
         self.single_test(3, lista_f5_local)
         self.multi_test(4, lista_f5_local_lista)
+        self.single_test(5, lista_nac)
 
     def save_test(self):
         dt_string = datetime.now().strftime('%y%m%d-%H%M')

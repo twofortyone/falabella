@@ -200,6 +200,20 @@ class InternalControlAnalysis:
         bdquery_res = bdquery[bdquery[valuecol]==value]
         return bdquery_res
 
+    def get_diffvalue_btw_cols(self, bdquery, valuecol_1, valuecol_2, note, comment):
+        """ 
+        Get rows with different value 
+        :param bdquery: dataframe to query
+        :param valuecol: (string) value column 
+        :param value: (string) value of comparison 
+        """
+        diffvalue = bdquery[bdquery[valuecol_1]!=bdquery[valuecol_2]]
+        idiffvalue = diffvalue[self.index_column].values
+        self.db.loc[idiffvalue, 'GCO'] = note
+        self.db.loc[idiffvalue, 'Comentario GCO'] = comment
+        bdquery_res = bdquery[bdquery[valuecol_1]==bdquery[valuecol_2]]
+        return bdquery_res
+
     def get_equalvalue(self, bdquery, valuecol, value, note, comment):
         """ 
         Get rows with different value 

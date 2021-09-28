@@ -204,6 +204,16 @@ class CierresNC:
         else: 
             return nil 
     
+    def no_carga_verify(self, status):
+        df1 = self.db[(self.db[self.pcols[1]]==status) & (self.db[self.pcols[5]]=='cerrado')]
+        if df1.empty ==False: 
+            df2 = self.ica.get_duplicates( df1, [self.fcols[5], 'local_trx',self.pcols[2], self.pcols[4]], 'Cod Aut + Local + UPC + Qty')
+            df3 = self.ica.get_diffvalue(df2, 'local_ant', '3000', 'NCL', 'Local de venta != local 3000')
+            ioknc = df3[self.pcols[0]].values
+            self.ica.update_db(ioknc, 'GCO', 'OKK')
+            self.ica.update_db(ioknc, 'Comentario GCO', 'Local de venta 3000')
+
+    
     def refact_verify_20(self, refact):
         df1 = self.db[(self.db['source']=='B1') ]
         df2= self.ica.get_fnan( df1, self.fcols[4], 'F12')
