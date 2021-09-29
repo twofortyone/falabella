@@ -3,7 +3,7 @@ from numpy import multiply
 import pandas as pd
 from datetime import datetime
 from ica_core.ica_nc import CierresNC
-from etl import ETL
+from etl_core.etl import ETL
 
 cts = ['9913','9917','9919','9920','9918','9912','9914', '9902']
 preventas = ['9904','9905','9908','9909','9915','9916']

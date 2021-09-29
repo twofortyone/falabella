@@ -1,7 +1,7 @@
 # Librerías
 import pandas as pd
 from datetime import datetime
-from cl_cleaning import CleaningText as ct 
+from etl_core.cl_cleaning import CleaningText as ct 
 from tqdm import tqdm
 
 dt_string = datetime.now().strftime('%y%m%d-%H%M')
@@ -9,7 +9,7 @@ dt_string = datetime.now().strftime('%y%m%d-%H%M')
 # Configuraciones
 pd.set_option('float_format', '{:,.2f}'.format)
 
-config = open('input/get_data_config.txt', 'r', encoding='ISO-8859-1')
+config = open('config/get_data_config.txt', 'r', encoding='ISO-8859-1')
 gdlines = [line.strip() for line in config.readlines()]
 config.close()
 

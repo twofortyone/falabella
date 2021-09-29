@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime
-from ica_raw import InternalControlAnalysis
+from ica_core.ica_raw import InternalControlAnalysis
 
 class CierresNC:
 

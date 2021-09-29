@@ -2,7 +2,7 @@ import pandas as pd
 from datetime import datetime
 from ica_core.ica_nc import CierresNC
 from tqdm import tqdm
-import input.tipmc as intip
+import config.tipmc as intip
 
 pd.set_option('float_format', '{:,.2f}'.format)
 pd.set_option('display.max_columns', 70)

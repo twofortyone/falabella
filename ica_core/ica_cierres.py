@@ -1,5 +1,5 @@
 import pandas as pd
-from ica_raw import InternalControlAnalysis
+from ica_core.ica_raw import InternalControlAnalysis
 
 class CierresF11:
 

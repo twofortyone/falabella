@@ -1,12 +1,12 @@
 import io
 import pandas as pd
 from datetime import datetime
-from cl_cleaning import CleaningText as ct 
+from etl_core.cl_cleaning import CleaningText as ct 
 from get_data import GetData
 
 # Variables 
 dt_string = datetime.now().strftime('%y%m%d-%H%M')
-config = open('input/cl_fs_config.txt', 'r', encoding='ISO-8859-1')
+config = open('config/cl_fs_config.txt', 'r', encoding='ISO-8859-1')
 clines = [line.strip() for line in config.readlines()]
 config.close()
 
