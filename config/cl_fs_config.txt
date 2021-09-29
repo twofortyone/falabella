@@ -1,0 +1,9 @@
+210927_f3 
+210927_f4
+2
+210929_f5
+5
+210918_kpi
+210924_cnc_21_base
+BASE
+output/bases/210730-1623-210730_base_refacturaciones.csv
