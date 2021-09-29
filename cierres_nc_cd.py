@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime
-from ica_nc import CierresNC
+from ica_core.ica_nc import CierresNC
 from tqdm import tqdm
 import input.tipmc as intip
 

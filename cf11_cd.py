@@ -1,7 +1,7 @@
 from os import name
 import pandas as pd
 from datetime import datetime
-from ica_cierres import CierresF11
+from ica_core.ica_cierres import CierresF11
 from etl import ETL
 
 class CF11_CD():

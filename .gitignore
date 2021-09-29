@@ -5,5 +5,4 @@ report/
 __pycache__/
 .DS_Store
 .ipynb_checkpoints/
-archive/
 examples/

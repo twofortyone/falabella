@@ -1,7 +1,7 @@
 # Librerías
 import pandas as pd
 from datetime import datetime
-from ica_cierres_tienda import CierresF11
+from ica_core.ica_cierres_tienda import CierresF11
 
 # Configuraciones
 pd.set_option('float_format', '{:,.2f}'.format)
