@@ -1,9 +1,9 @@
-210927_f3 
-210927_f4
+211019_f3 
+211019_f4
 2
-210929_f5
+211012_f5
 5
-210918_kpi
-210924_cnc_21_base
-BASE
+211018_kpi
+211019_cf11_tienda_21_base
+DB
 output/bases/210730-1623-210730_base_refacturaciones.csv

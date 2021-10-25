@@ -1,6 +1,6 @@
-output/planillas/210928-0002-f3-output.csv
-output/planillas/210928-0003-f4-output.csv
-output/planillas/210929-1404-f5-output.csv
-output/planillas/210920-1512-kpi-output.csv
+output/planillas/211019-1049-f3-output.csv
+output/planillas/211019-1050-f4-output.csv
+output/planillas/211012-1053-f5-output.csv
+output/planillas/211019-1502-kpi-output.csv
 output/bases/210730-1623-210730_base_refacturaciones.csv
-output/bases/210928-0021-210924_cnc_21_base-output.csv
+output/bases/211019-1507-211019_cf11_tienda_21_base-output.csv

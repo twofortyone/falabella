@@ -8,3 +8,4 @@ __pycache__/
 examples/
 config/cl_fs_config.txt
 config/get_data_config.txt
+rev_comparison/

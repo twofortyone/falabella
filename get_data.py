@@ -151,17 +151,17 @@ class GetData():
                 self.save_files('cierres_f11/cd')
 
             elif data_select=='2': # CF11s 2021 
-                cf11_21_colsreq  = ['f11','f12', 'prd_upc', 'qproducto', 'xobservacion', 'xservicio','costo_total', 'estado_actual', 'status_final', 'f3', 'f4', 'f5', 'f11_nuevo'] # Para cd 2021 
-                cf11_21_fnum = ['f11','f12', 'prd_upc', 'f3', 'f4', 'f5', 'f11_nuevo']
+                cf11_21_colsreq  = ['nfolio','f12', 'prd_upc', 'sku' , 'qproducto', 'xobservacion', 'xservicio','costo_total', 'estado_f11', 'status_final', 'f3', 'f4', 'f5', 'f11_nuevo', 'reporte_a_contabilidad', 'movimiento_contable', 'transportadora_nuevo', 'nc', 'tranf_electro_factura', 'nota', 'ro','mcf12', 'eef11'] # Para cd 2021 
+                cf11_21_fnum = ['nfolio','f12', 'prd_upc', 'sku', 'f3', 'f4', 'f5', 'f11_nuevo']
                 cf11_21_num = [ 'qproducto', 'costo_total'] 
-                cf11_21_text = ['xobservacion', 'status_final', 'xservicio']
+                cf11_21_text = ['xobservacion', 'status_final', 'xservicio', 'estado_f11', 'reporte_a_contabilidad', 'movimiento_contable', 'transportadora_nuevo', 'nc', 'tranf_electro_factura', 'nota']
                 self.update_lists('cf11_cd_21', cf11_21_colsreq, cf11_21_fnum, cf11_21_num, cf11_21_text)
                 self.get_data()
                 self.lista[5] = self.lista[5].rename(columns={'f11':'nfolio'}) # Only for 2021 
                 self.save_files('cierres_f11/cd')
 
             elif data_select =='3': # CF11s Tienda 2020 
-                cf11_tienda_colsreq = ['nfolio','prd_upc', 'estado_f11', 'producto', 'propietario', 'xservicio','qproducto', 'total_costo_promedio', 'f', 'motivo']
+                cf11_tienda_colsreq = ['nfolio','prd_upc', 'estado_f11', 'producto', 'propietario','qproducto', 'total_costo_promedio', 'f', 'motivo']
                 cf11_tienda_fnum = ['nfolio', 'prd_upc', 'f']
                 cf11_tienda_num = [  'qproducto','total_costo_promedio', 'estado_f11'] 
                 cf11_tienda_text = ['motivo', 'propietario']
@@ -170,10 +170,10 @@ class GetData():
                 self.save_files('cierres_f11/tienda')
 
             elif data_select =='4': # CF11s Tienda 2021 
-                cf11_tienda_colsreq = ['nfolio','ean', 'estado_f11', 'producto', 'propietario', 'xservicio' 'qproducto', 'costo_promedio', 'f', 'motivo_cierre']
-                cf11_tienda_fnum = ['nfolio', 'ean', 'f']
-                cf11_tienda_num = [ 'costo_promedio'] 
-                cf11_tienda_text = ['motivo_cierre', 'propietario', 'estado_f11']
+                cf11_tienda_colsreq = ['folio_servicio_tecnico','ean','local_envio', 'estado_servicio_tecnico', 'producto', 'propietario', 'tipo_servicio_f11','qproducto', 'costo_promedio', 'f', 'motivo_cierre']
+                cf11_tienda_fnum = ['folio_servicio_tecnico', 'ean', 'f', 'local_envio' ]
+                cf11_tienda_num = [ 'costo_promedio', 'qproducto'] 
+                cf11_tienda_text = ['motivo_cierre', 'propietario', 'estado_servicio_tecnico', 'tipo_servicio_f11']
                 self.update_lists('cf11_tienda_21', cf11_tienda_colsreq, cf11_tienda_fnum, cf11_tienda_num, cf11_tienda_text)
                 self.get_data()
                 self.save_files('cierres_f11/tienda')
@@ -189,7 +189,7 @@ class GetData():
             
             elif data_select == '6': # Cierres NCs 2021
                 cnc_colsreq = ['cod_aut_nc', 'local_trx', 'terminal', 'local_ant', 'upc', 'ct', 'cantidad_trx_actual', 'tipo_nc', 'f3', 'f4','f5', 'f11', 'estado_final', 'tipificacion_final', 'sku', 'primera_do_f12', 'fecha_proceso', 'fecha_proc_ant', 'ctip_prd', 'xtip_prd', 'desc_sku', 'tipo_nc'] 
-                cnc_fnum = ['cod_aut_nc', 'upc', 'f3', 'f4', 'f5', 'f11','local_trx', 'terminal', 'local_ant', 'sku', 'primera_do_f12']
+                cnc_fnum = ['cod_aut_nc', 'upc', 'f3', 'f4', 'f5','local_trx', 'terminal', 'local_ant', 'sku', 'primera_do_f12']
                 cnc_num = [ 'ct', 'cantidad_trx_actual'] 
                 cnc_text = ['estado_final', 'tipificacion_final', 'ctip_prd', 'xtip_prd', 'desc_sku', 'tipo_nc']
                 self.update_lists('cierres_nc_21', cnc_colsreq, cnc_fnum, cnc_num, cnc_text)

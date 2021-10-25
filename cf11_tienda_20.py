@@ -75,7 +75,7 @@ lista_f3_2021 = ['f3']
 for status_nuevo_f3 in lista_f3_2021:
     cierres.f3_verify(f3, status_nuevo_f3, '2021')
 
-#cierres.f5_verify(f5, 'f5', '2021')
+cierres.f5_verify(f5, 'f5', '2021')
 
 # Tareas finales 
 cierres.finals()

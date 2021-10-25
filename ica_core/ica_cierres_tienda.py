@@ -39,10 +39,11 @@ class CierresF11:
                 df8= self.ica.get_diffvalue(df7, 'aaaa anulacion', yyyy, 'NAA', f'Registro con año de confirmación diferente a {yyyy}')
 
     def f3_verify_21(self, f3, status, yyyy):
-        df1 = self.db[(self.db[self.pcols[0]]==status) & (self.db['estado_f11']=='cerrado')]
+        df1 = self.db[(self.db[self.pcols[0]]==status) & (self.db['estado_servicio_tecnico']=='entrega total')]
         df2= self.ica.get_fnan_cols( df1, [self.fcols[0],self.fcols[3]], 'F3|F11')
         if df2.empty == False: 
-            df3 = self.ica.get_duplicates( df2,[self.fcols[4],self.pcols[1], self.pcols[3]], 'F+UPC+Cantidad')
+            df3 = df2
+            #df3 = self.ica.get_duplicates( df2,[self.fcols[4],self.pcols[1], self.pcols[3]], 'F+UPC+Cantidad')
             index_ne_f11 = self.ica.get_notfound( df3, f3, [self.fcols[3], self.pcols[1]], ['folio_f11', 'upc'], 'folio_f11', '(F11|F3)+UPC+QTY')
             index_ne_f3 = self.ica.get_notfound( df3, f3, [self.fcols[0],self.pcols[1]], ['nro_devolucion','upc'], 'nro_devolucion', '(F11|F3)+UPC+QTY')
             mf11 = pd.merge(df3, f3, left_on=[self.fcols[3],self.pcols[1]], right_on=['folio_f11','upc'])
@@ -51,7 +52,7 @@ class CierresF11:
             df4 = pd.concat(lm, axis=0)
             if df4.empty ==False: 
                 df5 = self.ica.get_equalvalue(df4, 'descripcion6', 'anulado', 'ANU', 'Registro anulado')
-                df6 = self.ica.get_diffqty_pro(df5, self.pcols[3], 'cantidad',self.fcols[3], 'nro_devolucion' ,'Cantidad de los F11s de un F3 > cantidad del F3')
+                #df6 = self.ica.get_diffqty_pro(df5, self.pcols[3], 'cantidad',self.fcols[3], 'nro_devolucion' ,'Cantidad de los F11s de un F3 > cantidad del F3')
                 iokf3 = df5[self.index_column].values
                 self.ica.update_db(iokf3,'GCO', 'OKK')
                 self.ica.update_db(iokf3,'Comentario GCO', 'Coincidencia exacta (F11|F3)+UPC+QTY')
@@ -62,7 +63,6 @@ class CierresF11:
         df1 = self.db[(self.db[self.pcols[0]]==status)]
         df2 = self.ica.get_fnan_cols( df1, [self.fcols[1], self.fcols[3]], 'F4')
         if df2.empty == False:
-            df3 = df2
             df3 = self.ica.get_duplicates( df2, [self.fcols[4], self.pcols[1], self.pcols[3]], 'F12+UPC+Cantidad')
             index_ne_f11 = self.ica.get_notfound( df3, f4, [self.fcols[3], self.pcols[1]], ['f11', 'upc'], 'f11', '(F11|F4)+UPC+QTY')
             index_ne_f4 = self.ica.get_notfound( df3, f4, [self.fcols[1], self.pcols[1]], ['nro_red_inventario','upc'], 'nro_red_inventario', '(F11|F4)+UPC+QTY')
@@ -80,10 +80,11 @@ class CierresF11:
                 self.ica.update_db(iokf4,'Comentario GCO', 'Coincidencia exacta (F11|F4)+UPC+QTY')
 
     def f4_verify_21(self, f4, status, yyyy):
-        df1 = self.db[(self.db[self.pcols[0]]==status) & (self.db['estado_f11']=='cerrado')]
+        df1 = self.db[(self.db[self.pcols[0]]==status) & (self.db['estado_servicio_tecnico']=='entrega total')]
         df2 = self.ica.get_fnan_cols( df1, [self.fcols[1], self.fcols[3]], 'F4')
         if df2.empty == False:
-            df3 = self.ica.get_duplicates( df2, [self.fcols[4], self.pcols[1], self.pcols[3]], 'F12+UPC+Cantidad')
+            df3 = df2
+            #df3 = self.ica.get_duplicates( df2, [self.fcols[4], self.pcols[1], self.pcols[3]], 'F12+UPC+Cantidad')
             index_ne_f11 = self.ica.get_notfound( df3, f4, [self.fcols[3], self.pcols[1]], ['f11', 'upc'], 'f11', '(F11|F4)+UPC+QTY')
             index_ne_f4 = self.ica.get_notfound( df3, f4, [self.fcols[1], self.pcols[1]], ['nro_red_inventario','upc'], 'nro_red_inventario', '(F11|F4)+UPC+QTY')
             mf11 = pd.merge(df3, f4, left_on=[self.fcols[3],self.pcols[1]], right_on=['f11','upc'])
@@ -93,12 +94,12 @@ class CierresF11:
             if df4.empty ==False: 
                 df5 = self.ica.get_equalvalue(df4, 'estado', 'anulado', 'ANU', 'Registro anulado')
                 df6 = self.ica.get_diffvalue(df5, 'aa creacion', yyyy, 'NAA', f'Registro con año de creación diferente a {yyyy}')
-                df7 = self.ica.get_diffqty_pro(df6, self.pcols[3], 'cantidad',self.fcols[3],'nro_red_inventario', 'Cantidad de los F11s de un F4 > cantidad del F4')
+                #df7 = self.ica.get_diffqty_pro(df6, self.pcols[3], 'cantidad',self.fcols[3],'nro_red_inventario', 'Cantidad de los F11s de un F4 > cantidad del F4')
                 iokf4 = df6[self.index_column].values
                 self.ica.update_db(iokf4,'GCO', 'OKK')
                 self.ica.update_db(iokf4,'Comentario GCO', 'Coincidencia exacta (F11|F4)+UPC+QTY')
 
-    def f5_verify(self, f5, status, yyyy, ):
+    def f5_verify(self, f5, status, yyyy):
         df1 = self.db[self.db[self.pcols[0]]==status]
         df2 = self.ica.get_fnan( df1, self.fcols[2], 'F5')
         if df2.empty ==False: 
@@ -115,6 +116,24 @@ class CierresF11:
                 self.ica.update_db(iokf5, 'GCO','OKK')
                 self.ica.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY')
     
+    def f5_verify(self, f5, status, yyyy):
+        df1 = self.db[self.db[self.pcols[0]]==status]
+        df2 = self.ica.get_fnan( df1, self.fcols[2], 'F5')
+        if df2.empty ==False: 
+            df3 = df2
+            #df3 = self.ica.get_duplicates( df2, [self.fcols[4], self.pcols[1], self.pcols[3] ], 'F12 + UPC + Cantidad')
+            ne = self.ica.get_notfound( df3, f5, [self.fcols[2], self.pcols[1]], ['transfer','upc'], 'transfer', 'F5|UPC|Qty')
+            df4 = pd.merge(df3, f5, left_on=[self.fcols[2], self.pcols[1]], right_on=['transfer','upc'])
+            if df4.empty ==False: 
+                df5 = self.ica.get_diffvalue(df4, 'estado', 'recibido', 'NRE', 'Registro con estado diferente a recibido')
+                df6 = self.ica.get_equalvalue(df5, 'motivo_discrepancia', 'f5 no recibido', 'MDI', 'Registro con motivo de disc: F5 no recibido')
+                df7 = self.ica.get_diffvalue(df6, 'aaaa reserva', yyyy, 'NAA', f'Registro con año de reserva diferente a {yyyy}')
+                comment = f'La cantidad sumada de los F11s de un F5 es mayor que la cantidad del F5'
+                #df8 = self.ica.get_diffqty_pro(df7,  self.pcols[3], 'cant_recibida', self.fcols[3], 'transfer', comment)
+                iokf5 = df7[self.index_column].values
+                self.ica.update_db(iokf5, 'GCO','OKK')
+                self.ica.update_db(iokf5, 'Comentario GCO', 'Coincidencia exacta F5+UPC+QTY')
+
     def kpi_verify(self, kpi, status, yyyy, commenty):
         df1 = self.db[self.db[self.pcols[0]]==status]
         df2= self.ica.get_fnan_cols(df1, [self.fcols[4],self.fcols[3]], 'KPID')

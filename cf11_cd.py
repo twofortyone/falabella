@@ -103,18 +103,18 @@ class CF11_CD():
         self.single_test(4, lista_refact ) # Refacturación 
 
     def test_call_21(self):
-        lista_f3 = [['f3 en revision', '2021'],['cierre x f3 devuelto a proveedor', '2021']]
+        lista_f3 = [['cierre x f3 devuelto a proveedor', '2021']]
         lista_f4 = [['f4 en revision', '2021'],['cierre x f4 cobrado a terceros', '2021'], ['f4 de merma', '2021'], 
-                    ['error en creacion de f11', '2021'] , ['error en cierre f11', '2021'], ['entregado a cliente', '2021']] 
-        lista_f5 = ['producto en tienda', '2021']
+                    ['entregado a cliente por politica (fast track)', '2021'], ['entregado a cliente', '2021']] 
+        lista_f5 = [['producto en tienda', '2021'], ['cierre con f5 administrativo cd', '2021'], 
+        ['producto compensado con ctverde-recibido', '2021'], ['producto compensado con tienda - recibido', '2021']]
         lista_kpi = [['cierre x producto guardado despues de inventario', '2021', 'Recibido con fecha anterior al 21/01/2021'], 
-        ['cierre x producto guardado despues de inventario - no aplica f12', '2021', 'Recibido con fecha anterior al 21/01/2021'], 
         ['cierre x producto guardado antes de inventario', '2020', 'Recibido con fecha posterior al 20/01/2021']]
         lista_refact = 'cierre x recupero con cliente - refacturacion - base fal.com'
 
         self.multi_test(0, lista_f3) # F3 
         self.multi_test(1, lista_f4) # F4 
-        self.single_test(2, lista_f5) # F5 
+        self.multi_test(2, lista_f5) # F5 
         self.multi_test(3, lista_kpi) # KPI
         self.single_test(4, lista_refact) # Refacturación 
 

@@ -24,8 +24,8 @@ cost_column = 'costo_promedio'
 status_column = 'motivo_cierre'
 qty_column = 'qproducto'
 upc_column = 'ean'
-fcols = ['f','f','f','nfolio','f']
-fcolaux = ['f', 'nfolio']
+fcols = ['f','f','f','folio_servicio_tecnico','f']
+fcolaux = ['f', 'folio_servicio_tecnico']
 
 # Generar indice en columna
 c11t.reset_index(inplace=True)
@@ -75,7 +75,7 @@ lista_f3_2021 = ['f3']
 for status_nuevo_f3 in lista_f3_2021:
     cierres.f3_verify_21(f3, status_nuevo_f3, '2021')
 
-#cierres.f5_verify(f5, 'f5', '2021')
+cierres.f5_verify(f5, 'f5', '2021')
 
 # Tareas finales 
 cierres.finals()
