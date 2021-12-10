@@ -151,7 +151,7 @@ class GetData():
                 self.save_files('cierres_f11/cd')
 
             elif data_select=='2': # CF11s 2021 
-                cf11_21_colsreq  = ['nfolio','f12', 'prd_upc', 'sku' , 'qproducto', 'xobservacion', 'xservicio','costo_total', 'estado_f11', 'status_final', 'f3', 'f4', 'f5', 'f11_nuevo', 'reporte_a_contabilidad', 'movimiento_contable', 'transportadora_nuevo', 'nc', 'tranf_electro_factura', 'nota', 'ro','mcf12', 'eef11'] # Para cd 2021 
+                cf11_21_colsreq  = ['nfolio','f12', 'prd_upc', 'sku' , 'qproducto', 'xobservacion', 'xservicio','costo_total', 'estado_f11', 'status_final', 'f3', 'f4', 'f5', 'f11_nuevo', 'reporte_a_contabilidad', 'movimiento_contable', 'transportadora_nuevo', 'nc', 'tranf_electro_factura', 'nota', 'ro','mc(f12)', 'ee(f11)'] # Para cd 2021 
                 cf11_21_fnum = ['nfolio','f12', 'prd_upc', 'sku', 'f3', 'f4', 'f5', 'f11_nuevo']
                 cf11_21_num = [ 'qproducto', 'costo_total'] 
                 cf11_21_text = ['xobservacion', 'status_final', 'xservicio', 'estado_f11', 'reporte_a_contabilidad', 'movimiento_contable', 'transportadora_nuevo', 'nc', 'tranf_electro_factura', 'nota']
@@ -170,9 +170,9 @@ class GetData():
                 self.save_files('cierres_f11/tienda')
 
             elif data_select =='4': # CF11s Tienda 2021 
-                cf11_tienda_colsreq = ['folio_servicio_tecnico','ean','local_envio', 'estado_servicio_tecnico', 'producto', 'propietario', 'tipo_servicio_f11','qproducto', 'costo_promedio', 'f', 'motivo_cierre']
-                cf11_tienda_fnum = ['folio_servicio_tecnico', 'ean', 'f', 'local_envio' ]
-                cf11_tienda_num = [ 'costo_promedio', 'qproducto'] 
+                cf11_tienda_colsreq = ['folio_servicio_tecnico','ean','local_envio', 'estado_servicio_tecnico', 'producto', 'propietario', 'tipo_servicio_f11','cantidad_f11', 'costo_promedio', 'f', 'motivo_cierre']
+                cf11_tienda_fnum = ['folio_servicio_tecnico', 'ean', 'f','local_envio' ]
+                cf11_tienda_num = [ 'costo_promedio', 'cantidad_f11'] 
                 cf11_tienda_text = ['motivo_cierre', 'propietario', 'estado_servicio_tecnico', 'tipo_servicio_f11']
                 self.update_lists('cf11_tienda_21', cf11_tienda_colsreq, cf11_tienda_fnum, cf11_tienda_num, cf11_tienda_text)
                 self.get_data()

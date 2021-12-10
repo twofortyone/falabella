@@ -22,7 +22,7 @@ dt_string = datetime.now().strftime('%y%m%d-%H%M')
 index_name = 'indice_c11t'
 cost_column = 'costo_promedio'
 status_column = 'motivo_cierre'
-qty_column = 'qproducto'
+qty_column = 'cantidad_f11'
 upc_column = 'ean'
 fcols = ['f','f','f','folio_servicio_tecnico','f']
 fcolaux = ['f', 'folio_servicio_tecnico']
@@ -38,7 +38,7 @@ f4.loc[:,'cantidad'] = pd.to_numeric(f4.loc[:,'cantidad'])
 f5.loc[:,'cant_pickeada'] = pd.to_numeric(f5.loc[:,'cant_pickeada'])
 f5.loc[:,'cant_recibida'] = pd.to_numeric(f5.loc[:,'cant_recibida'])
 #f5.loc[:,['cant_pickeada','cant_recibida']] =  f5[['cant_pickeada','cant_recibida']].apply(pd.to_numeric)
-c11t.loc[:,[cost_column]] = c11t[[cost_column]].apply(pd.to_numeric)
+c11t.loc[:,[qty_column,cost_column]] = c11t[[qty_column,cost_column]].apply(pd.to_numeric)
 
 # TODO ---- revisar desde aquí 
 
@@ -69,11 +69,11 @@ cierres.set_fcols(fcols, [status_column, upc_column, cost_column, qty_column])
 
 lista_f4_2021 = ['f4']
 for status_nuevo in lista_f4_2021:
-    cierres.f4_verify_21(f4, status_nuevo, '2021')
+    cierres.f4_verify(f4, status_nuevo, '2021')
 
 lista_f3_2021 = ['f3']
 for status_nuevo_f3 in lista_f3_2021:
-    cierres.f3_verify_21(f3, status_nuevo_f3, '2021')
+    cierres.f3_verify(f3, status_nuevo_f3, '2021')
 
 cierres.f5_verify(f5, 'f5', '2021')
 
@@ -87,12 +87,6 @@ print(res)# Presenta todos los estados
 def guardar():
     path = f'output/cierres_f11/tienda/{dt_string}-cf11_tienda_21-output.xlsx'
     c11t.to_excel(path, sheet_name=f'{dt_string}-cf11_tienda', index=False) # Guarda el archivo 
-    # bdcia = c11t.merge(f3, how='left', left_on=[fcols[0],'prd_upc'], right_on=['nro_devolucion','upc'], validate='many_to_one')
-    # bdcia2 = bdcia.merge(f4, how='left',  left_on=[fcols[1],'prd_upc'], right_on=['nro_red_inventario','upc'],validate='many_to_one')
-    # bdcia3 = bdcia2.merge(f5, how='left', left_on=[fcols[2],'prd_upc'], right_on=['transfer','upc'], validate='many_to_one')
-    # bdcia4 = bdcia3.merge(kpi, how='left',left_on=[fcols[3]], right_on=['entrada'],validate='many_to_one')
-    # bdcia5 = bdcia4.merge(refact, how='left',left_on=[fcols[4]], right_on=['f12cod'],validate='many_to_one')
-    # bdcia4.to_csv(f'output/{dt_string}-novedades-cierref11-all.csv', sep=';', index=False) 
     return path
  
 print('Desea guardar los resultados? (y/n)')

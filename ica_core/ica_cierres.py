@@ -39,8 +39,8 @@ class CierresF11:
             ne = self.ica.get_notfound( df3, f4, [self.fcols[1], self.pcols[2]], ['nro_red_inventario','upc'], 'nro_red_inventario', 'F4|UPC|QTY')
             df4 = pd.merge(df3, f4, left_on=[self.fcols[1], self.pcols[2]], right_on=['nro_red_inventario','upc'])
             if df4.empty ==False: 
-                #auxdf4 = self.ica.get_diffvalue(df4, 'tipo_redinv', 'dado de baja', 'NDB', 'El tipo de F4 es diferente a dado de baja')
-                df5 = self.ica.get_equalvalue(df4, 'estado', 'anulado', 'ANU', 'Registro anulado')
+                auxdf4 = self.ica.get_diffvalue(df4, 'tipo_redinv', 'dado de baja', 'NDB', 'El tipo de F4 es diferente a dado de baja')
+                df5 = self.ica.get_equalvalue(auxdf4, 'estado', 'anulado', 'ANU', 'Registro anulado')
                 df6 = self.ica.get_diffvalue(df5, 'aa creacion', yyyy, 'NAA', f'Registro con año de creación diferente a {yyyy}')
                 df7 = self.ica.get_diffqty_pro(df6, self.pcols[4], 'cantidad',self.fcols[3],'nro_red_inventario', 'Cantidad de los F11s de un F4 > cantidad del F4')
                 iokf4 = df7[self.pcols[0]].values
