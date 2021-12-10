@@ -6,6 +6,5 @@ __pycache__/
 .DS_Store
 .ipynb_checkpoints/
 examples/
-config/cl_fs_config.txt
-config/get_data_config.txt
+config/
 rev_comparison/
